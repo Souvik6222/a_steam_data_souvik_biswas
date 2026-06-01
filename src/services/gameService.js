@@ -1,4 +1,6 @@
 import Game from '../models/Game.js';
+import buildFilter from '../utils/buildFilter.js';
+import paginate from '../utils/paginate.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -13,13 +15,46 @@ const findByAppid = (appid, projection = {}) =>
 
 // ── Service functions ─────────────────────────────────────────────────────────
 
+// ── Sort-field map ────────────────────────────────────────────────────────────
+const SORT_FIELDS = {
+  price:       'price.original',
+  rating:      'rating',
+  downloads:   'downloads',
+  releaseDate: 'release_date',
+  title:       'title',
+};
+
 /**
- * Fetch all active (non-deleted) games.
- * Supports filtering via query object (e.g. genre, rating range, etc.)
+ * Build a Mongoose sort document from the `sort` query param.
+ * Accepts values like "rating", "rating-desc", "price-desc", etc.
+ * Defaults to { createdAt: -1 } if unrecognised.
+ * @param {string} [sortParam]
+ * @returns {object}
+ */
+const resolveSort = (sortParam) => {
+  if (!sortParam) return { createdAt: -1 };
+
+  const [field, dir] = sortParam.split('-');
+  const mongoField = SORT_FIELDS[field];
+  if (!mongoField) return { createdAt: -1 };
+
+  return { [mongoField]: dir === 'desc' ? -1 : 1 };
+};
+
+/**
+ * Fetch all active (non-deleted) games with filtering, sorting, and pagination.
+ *
+ * Recognised query params (beyond buildFilter's set):
+ *   sort  — "price" | "rating" | "downloads" | "releaseDate" | "title"
+ *           append "-desc" for descending, e.g. "rating-desc"
+ *   page  — 1-based page number (default: 1)
+ *   limit — page size (default: 20, max: 100)
  */
 export const getAllGames = async (query = {}) => {
-  const filter = { isDeleted: false, ...query };
-  return Game.find(filter).lean();
+  const { sort, page, limit, ...filterParams } = query;
+  const filter  = buildFilter(filterParams);
+  const sortDoc = resolveSort(sort);
+  return paginate(Game, filter, sortDoc, page, limit);
 };
 
 /**

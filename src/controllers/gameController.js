@@ -13,12 +13,13 @@ const respond = (res, statusCode, success, message, data = null, error = null) =
  */
 export const getAllGames = async (req, res) => {
   try {
-    const games = await gameService.getAllGames(req.query);
-    respond(res, 200, true, 'Games fetched successfully.', games);
+    const result = await gameService.getAllGames(req.query);
+    respond(res, 200, true, 'Games fetched successfully.', result);
   } catch (err) {
     respond(res, 500, false, 'Failed to fetch games.', null, err.message);
   }
 };
+
 
 /**
  * GET /api/games/:appid
