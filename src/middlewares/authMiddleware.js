@@ -1,38 +1,36 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/userModel.js';
 
-export const protect = async (req, res, next) => {
-  let token;
+/**
+ * Verifies the Bearer JWT in the Authorization header.
+ * On success attaches `req.user = { id, role }` and calls next().
+ * On failure returns 401.
+ */
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = await User.findById(decoded.id).select('-password');
-
-      return next();
-    } catch (error) {
-      res.status(401);
-      return next(new Error('Not authorized, token failed'));
-    }
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      success: false,
+      message: 'Access denied. No token provided.',
+      data: null,
+      error: null,
+    });
   }
 
-  if (!token) {
-    res.status(401);
-    return next(new Error('Not authorized, no token'));
-  }
-};
+  const token = authHeader.split(' ')[1];
 
-export const admin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: decoded.id, role: decoded.role };
     next();
-  } else {
-    res.status(401);
-    next(new Error('Not authorized as an admin'));
+  } catch {
+    return res.status(401).json({
+      success: false,
+      message: 'Access denied. Token is invalid or expired.',
+      data: null,
+      error: null,
+    });
   }
 };
+
+export default authMiddleware;
