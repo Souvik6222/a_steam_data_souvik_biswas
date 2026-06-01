@@ -5,7 +5,7 @@ import * as gameService from '../services/gameService.js';
 const respond = (res, statusCode, success, message, data = null, error = null) =>
   res.status(statusCode).json({ success, message, data, error });
 
-// ── Controllers ───────────────────────────────────────────────────────────────
+// ── Existing CRUD controllers ─────────────────────────────────────────────────
 
 /**
  * GET /api/games
@@ -19,7 +19,6 @@ export const getAllGames = async (req, res) => {
     respond(res, 500, false, 'Failed to fetch games.', null, err.message);
   }
 };
-
 
 /**
  * GET /api/games/:appid
@@ -172,3 +171,52 @@ export const getRelatedGames = async (req, res) => {
     respond(res, 500, false, 'Failed to fetch related games.', null, err.message);
   }
 };
+
+// ── Param-route controllers ───────────────────────────────────────────────────
+
+const handleParamRoute = (serviceFn, label) => async (req, res) => {
+  try {
+    const paramValue = Object.values(req.params)[0]; // first param (genre/developer/etc.)
+    const result = await serviceFn(paramValue, req.query);
+    respond(res, 200, true, `${label} fetched successfully.`, result);
+  } catch (err) {
+    respond(res, 500, false, `Failed to fetch ${label.toLowerCase()}.`, null, err.message);
+  }
+};
+
+export const getGamesByGenre       = handleParamRoute(gameService.getGamesByGenre,       'Games by genre');
+export const getGamesByDeveloper   = handleParamRoute(gameService.getGamesByDeveloper,   'Games by developer');
+export const getGamesByPublisher   = handleParamRoute(gameService.getGamesByPublisher,   'Games by publisher');
+export const getGamesByPlatform    = handleParamRoute(gameService.getGamesByPlatform,    'Games by platform');
+export const getGamesByTag         = handleParamRoute(gameService.getGamesByTag,         'Games by tag');
+export const getGamesByReleaseYear = handleParamRoute(gameService.getGamesByReleaseYear, 'Games by release year');
+export const getGamesByMinRating   = handleParamRoute(gameService.getGamesByMinRating,   'Games by rating');
+export const getGamesByMaxPrice    = handleParamRoute(gameService.getGamesByMaxPrice,    'Games by price');
+export const getGamesByFeature     = handleParamRoute(gameService.getGamesByFeature,     'Games by feature');
+
+// ── Boolean filter-route controllers ─────────────────────────────────────────
+
+const handleFilterRoute = (serviceFn, label) => async (req, res) => {
+  try {
+    const result = await serviceFn(req.query);
+    respond(res, 200, true, `${label} fetched successfully.`, result);
+  } catch (err) {
+    respond(res, 500, false, `Failed to fetch ${label.toLowerCase()}.`, null, err.message);
+  }
+};
+
+export const getFreeToPlayGames   = handleFilterRoute(gameService.getFreeToPlayGames,   'Free-to-play games');
+export const getPaidGames         = handleFilterRoute(gameService.getPaidGames,          'Paid games');
+export const getDiscountedGames   = handleFilterRoute(gameService.getDiscountedGames,   'Discounted games');
+export const getEarlyAccessGames  = handleFilterRoute(gameService.getEarlyAccessGames,  'Early access games');
+export const getVROnlyGames       = handleFilterRoute(gameService.getVROnlyGames,       'VR-only games');
+export const getControllerGames   = handleFilterRoute(gameService.getControllerGames,   'Controller-support games');
+export const getMultiplayerGames  = handleFilterRoute(gameService.getMultiplayerGames,  'Multiplayer games');
+export const getSingleplayerGames = handleFilterRoute(gameService.getSingleplayerGames, 'Singleplayer games');
+export const getCoopGames         = handleFilterRoute(gameService.getCoopGames,         'Co-op games');
+export const getOpenWorldGames    = handleFilterRoute(gameService.getOpenWorldGames,    'Open-world games');
+export const getSurvivalGames     = handleFilterRoute(gameService.getSurvivalGames,     'Survival games');
+export const getHorrorGames       = handleFilterRoute(gameService.getHorrorGames,       'Horror games');
+export const getAnimeGames        = handleFilterRoute(gameService.getAnimeGames,        'Anime games');
+export const getIndieGames        = handleFilterRoute(gameService.getIndieGames,        'Indie games');
+export const getTopRatedGames     = handleFilterRoute(gameService.getTopRatedGames,     'Top-rated games');

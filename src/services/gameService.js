@@ -178,3 +178,126 @@ export const getRelatedGames = async (appid) => {
     isDeleted: false,
   }).lean();
 };
+
+// ── Param-route services ──────────────────────────────────────────────────────
+// Each accepts the route param value + optional { page, limit, sort } from query.
+
+/** GET /genre/:genre */
+export const getGamesByGenre = (genre, query = {}) => {
+  const { sort, page, limit } = query;
+  const filter = { isDeleted: false, genres: { $in: [genre] } };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/** GET /developer/:developer */
+export const getGamesByDeveloper = (developer, query = {}) => {
+  const { sort, page, limit } = query;
+  const filter = { isDeleted: false, developer };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/** GET /publisher/:publisher */
+export const getGamesByPublisher = (publisher, query = {}) => {
+  const { sort, page, limit } = query;
+  const filter = { isDeleted: false, publisher };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/** GET /platform/:platform  (windows | mac | linux) */
+export const getGamesByPlatform = (platform, query = {}) => {
+  const { sort, page, limit } = query;
+  const validPlatforms = ['windows', 'mac', 'linux'];
+  const p = platform.trim().toLowerCase();
+  const filter = validPlatforms.includes(p)
+    ? { isDeleted: false, [`platforms.${p}`]: true }
+    : { isDeleted: false };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/** GET /tag/:tag */
+export const getGamesByTag = (tag, query = {}) => {
+  const { sort, page, limit } = query;
+  const filter = { isDeleted: false, tags: { $in: [tag] } };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/** GET /release-year/:year */
+export const getGamesByReleaseYear = (year, query = {}) => {
+  const { sort, page, limit } = query;
+  const y = parseInt(year, 10);
+  const filter = {
+    isDeleted: false,
+    release_date: {
+      $gte: new Date(`${y}-01-01`),
+      $lt:  new Date(`${y + 1}-01-01`),
+    },
+  };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/** GET /rating/:rating  — games with rating >= value */
+export const getGamesByMinRating = (rating, query = {}) => {
+  const { sort, page, limit } = query;
+  const filter = { isDeleted: false, rating: { $gte: Number(rating) } };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/** GET /price/:price  — games with price.original <= value */
+export const getGamesByMaxPrice = (price, query = {}) => {
+  const { sort, page, limit } = query;
+  const filter = { isDeleted: false, 'price.original': { $lte: Number(price) } };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+/**
+ * GET /feature/:feature
+ * Maps a URL-friendly feature slug to a boolean schema field.
+ */
+const FEATURE_FIELD_MAP = {
+  'free-to-play':        'isFreeToPlay',
+  'early-access':        'isEarlyAccess',
+  'vr-only':             'isVROnly',
+  'controller-support':  'hasControllerSupport',
+  multiplayer:           'isMultiplayer',
+  singleplayer:          'isSingleplayer',
+  coop:                  'isCoop',
+  'open-world':          'isOpenWorld',
+  survival:              'isSurvival',
+  horror:                'isHorror',
+  anime:                 'isAnime',
+  indie:                 'isIndie',
+};
+
+export const getGamesByFeature = (feature, query = {}) => {
+  const { sort, page, limit } = query;
+  const field = FEATURE_FIELD_MAP[feature.toLowerCase()];
+  const filter = field
+    ? { isDeleted: false, [field]: true }
+    : { isDeleted: false };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+// ── Boolean filter-route services ─────────────────────────────────────────────
+
+const filterQuery = (extraFilter, query = {}) => {
+  const { sort, page, limit } = query;
+  const filter = { isDeleted: false, ...extraFilter };
+  return paginate(Game, filter, resolveSort(sort), page, limit);
+};
+
+export const getFreeToPlayGames    = (q) => filterQuery({ isFreeToPlay: true },  q);
+export const getPaidGames          = (q) => filterQuery({ isFreeToPlay: false }, q);
+export const getDiscountedGames    = (q) => filterQuery({ 'price.discount_percent': { $gt: 0 } }, q);
+export const getEarlyAccessGames   = (q) => filterQuery({ isEarlyAccess: true },        q);
+export const getVROnlyGames        = (q) => filterQuery({ isVROnly: true },             q);
+export const getControllerGames    = (q) => filterQuery({ hasControllerSupport: true }, q);
+export const getMultiplayerGames   = (q) => filterQuery({ isMultiplayer: true },        q);
+export const getSingleplayerGames  = (q) => filterQuery({ isSingleplayer: true },       q);
+export const getCoopGames          = (q) => filterQuery({ isCoop: true },               q);
+export const getOpenWorldGames     = (q) => filterQuery({ isOpenWorld: true },          q);
+export const getSurvivalGames      = (q) => filterQuery({ isSurvival: true },           q);
+export const getHorrorGames        = (q) => filterQuery({ isHorror: true },             q);
+export const getAnimeGames         = (q) => filterQuery({ isAnime: true },              q);
+export const getIndieGames         = (q) => filterQuery({ isIndie: true },              q);
+export const getTopRatedGames      = (q) => filterQuery({}, { ...q, sort: 'rating-desc' });
+
