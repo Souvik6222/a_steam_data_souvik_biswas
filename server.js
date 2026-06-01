@@ -5,6 +5,7 @@ import connectDB from './src/config/db.js';
 import userRoutes from './src/routes/userRoutes.js';
 import gameRoutes from './src/routes/gameRoutes.js';
 import searchRoutes from './src/routes/searchRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
 import { notFound, errorHandler } from './src/middlewares/errorMiddleware.js';
 
 // Load environment variables from .env file
@@ -28,6 +29,7 @@ app.get('/', (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/v1/search', searchRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Bind custom fallback and global error handling middlewares
 app.use(notFound);
