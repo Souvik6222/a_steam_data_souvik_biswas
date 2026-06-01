@@ -220,3 +220,12 @@ export const getHorrorGames       = handleFilterRoute(gameService.getHorrorGames
 export const getAnimeGames        = handleFilterRoute(gameService.getAnimeGames,        'Anime games');
 export const getIndieGames        = handleFilterRoute(gameService.getIndieGames,        'Indie games');
 export const getTopRatedGames     = handleFilterRoute(gameService.getTopRatedGames,     'Top-rated games');
+
+// ── Sort-route controllers ────────────────────────────────────────────────────
+
+export const getSortedByPriceDesc      = handleFilterRoute(gameService.getSortedByPriceDesc,      'Games sorted by price');
+export const getSortedByRatingDesc     = handleFilterRoute(gameService.getSortedByRatingDesc,     'Games sorted by rating');
+export const getSortedByDownloadsDesc  = handleFilterRoute(gameService.getSortedByDownloadsDesc,  'Games sorted by downloads');
+export const getSortedByReleaseDateDesc = handleFilterRoute(gameService.getSortedByReleaseDateDesc, 'Games sorted by release date');
+export const getSortedByPopularityDesc = handleFilterRoute(gameService.getSortedByPopularityDesc, 'Games sorted by popularity');
+

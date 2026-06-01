@@ -40,6 +40,12 @@ import {
   getAnimeGames,
   getIndieGames,
   getTopRatedGames,
+  // ── Sort-route controllers
+  getSortedByPriceDesc,
+  getSortedByRatingDesc,
+  getSortedByDownloadsDesc,
+  getSortedByReleaseDateDesc,
+  getSortedByPopularityDesc,
 } from '../controllers/gameController.js';
 
 const router = Router();
@@ -47,6 +53,13 @@ const router = Router();
 // ── Collection routes ─────────────────────────────────────────────────────────
 router.get('/',    getAllGames);  // GET  /api/games
 router.post('/',   createGame);  // POST /api/games
+
+// ── Sort routes (static — before /filter/* and param routes) ────────────────
+router.get('/sort/price-desc',       getSortedByPriceDesc);       // GET /api/games/sort/price-desc
+router.get('/sort/rating-desc',      getSortedByRatingDesc);      // GET /api/games/sort/rating-desc
+router.get('/sort/downloads-desc',   getSortedByDownloadsDesc);   // GET /api/games/sort/downloads-desc
+router.get('/sort/releaseDate-desc', getSortedByReleaseDateDesc); // GET /api/games/sort/releaseDate-desc
+router.get('/sort/popularity-desc',  getSortedByPopularityDesc);  // GET /api/games/sort/popularity-desc
 
 // ── Filter routes (static segments — must be registered BEFORE param routes) ──
 router.get('/filter/free-to-play',        getFreeToPlayGames);   // GET /api/games/filter/free-to-play
