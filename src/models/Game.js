@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
@@ -122,4 +122,5 @@ GameSchema.query.active = function () {
   return this.where({ isDeleted: false });
 };
 
-module.exports = mongoose.model('Game', GameSchema);
+export default mongoose.model('Game', GameSchema);
+
