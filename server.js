@@ -4,6 +4,7 @@ import cors from 'cors';
 import connectDB from './src/config/db.js';
 import userRoutes from './src/routes/userRoutes.js';
 import gameRoutes from './src/routes/gameRoutes.js';
+import searchRoutes from './src/routes/searchRoutes.js';
 import { notFound, errorHandler } from './src/middlewares/errorMiddleware.js';
 
 // Load environment variables from .env file
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 // Bind route handlers
 app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/v1/search', searchRoutes);
 
 // Bind custom fallback and global error handling middlewares
 app.use(notFound);
