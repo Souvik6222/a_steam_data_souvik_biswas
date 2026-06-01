@@ -301,3 +301,62 @@ export const getAnimeGames         = (q) => filterQuery({ isAnime: true },      
 export const getIndieGames         = (q) => filterQuery({ isIndie: true },              q);
 export const getTopRatedGames      = (q) => filterQuery({}, { ...q, sort: 'rating-desc' });
 
+// ── Sort-route services ───────────────────────────────────────────────────────
+
+const BASE_FILTER = { isDeleted: false };
+
+/** GET /sort/price-desc — cheapest to most expensive (desc = high price first) */
+export const getSortedByPriceDesc = (query = {}) => {
+  const { page, limit } = query;
+  return paginate(Game, BASE_FILTER, { 'price.original': -1 }, page, limit);
+};
+
+/** GET /sort/rating-desc — highest rated first */
+export const getSortedByRatingDesc = (query = {}) => {
+  const { page, limit } = query;
+  return paginate(Game, BASE_FILTER, { rating: -1 }, page, limit);
+};
+
+/** GET /sort/downloads-desc — most downloaded first */
+export const getSortedByDownloadsDesc = (query = {}) => {
+  const { page, limit } = query;
+  return paginate(Game, BASE_FILTER, { downloads: -1 }, page, limit);
+};
+
+/** GET /sort/releaseDate-desc — newest releases first */
+export const getSortedByReleaseDateDesc = (query = {}) => {
+  const { page, limit } = query;
+  return paginate(Game, BASE_FILTER, { release_date: -1 }, page, limit);
+};
+
+/**
+ * GET /sort/popularity-desc
+ * Composite score: downloads + (rating * 100).
+ * Uses aggregation so no schema change is required.
+ */
+export const getSortedByPopularityDesc = async (query = {}) => {
+  const safePage  = Math.max(1, parseInt(query.page,  10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 20));
+  const skip      = (safePage - 1) * safeLimit;
+
+  const [countResult, data] = await Promise.all([
+    Game.countDocuments(BASE_FILTER),
+    Game.aggregate([
+      { $match: BASE_FILTER },
+      { $addFields: { popularityScore: { $add: ['$downloads', { $multiply: ['$rating', 100] }] } } },
+      { $sort: { popularityScore: -1 } },
+      { $skip: skip },
+      { $limit: safeLimit },
+      { $project: { popularityScore: 0 } }, // strip the ephemeral field from output
+    ]),
+  ]);
+
+  return {
+    data,
+    total:      countResult,
+    page:       safePage,
+    totalPages: Math.ceil(countResult / safeLimit),
+  };
+};
+
+
