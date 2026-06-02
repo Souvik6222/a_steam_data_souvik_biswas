@@ -36,8 +36,8 @@ const ReviewSchema = new Schema(
     user:    { type: String, trim: true },
     comment: { type: String, trim: true },
     score:   { type: Number, min: 0, max: 10 },
-  },
-  { _id: false }
+  }
+  // _id intentionally enabled so each review is addressable by _id
 );
 
 // ── Main schema ────────────────────────────────────────────────────────────────

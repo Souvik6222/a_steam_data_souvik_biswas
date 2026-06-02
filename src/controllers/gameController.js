@@ -229,3 +229,169 @@ export const getSortedByDownloadsDesc  = handleFilterRoute(gameService.getSorted
 export const getSortedByReleaseDateDesc = handleFilterRoute(gameService.getSortedByReleaseDateDesc, 'Games sorted by release date');
 export const getSortedByPopularityDesc = handleFilterRoute(gameService.getSortedByPopularityDesc, 'Games sorted by popularity');
 
+// ── Sub-resource controllers ───────────────────────────────────────────────────
+
+/**
+ * GET /api/games/:appid/screenshots
+ */
+export const getScreenshots = async (req, res) => {
+  try {
+    const data = await gameService.getScreenshots(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'Screenshots fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch screenshots.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/trailers
+ */
+export const getTrailers = async (req, res) => {
+  try {
+    const data = await gameService.getTrailers(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'Trailers fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch trailers.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/reviews
+ */
+export const getReviews = async (req, res) => {
+  try {
+    const data = await gameService.getReviews(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'Reviews fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch reviews.', null, err.message);
+  }
+};
+
+/**
+ * POST /api/games/:appid/reviews
+ */
+export const addReview = async (req, res) => {
+  try {
+    const game = await gameService.addReview(req.params.appid, req.body);
+    if (!game) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 201, true, 'Review added successfully.', game.reviews);
+  } catch (err) {
+    respond(res, 400, false, 'Failed to add review.', null, err.message);
+  }
+};
+
+/**
+ * PATCH /api/games/:appid/reviews/:reviewId
+ */
+export const updateReview = async (req, res) => {
+  try {
+    const game = await gameService.updateReview(
+      req.params.appid,
+      req.params.reviewId,
+      req.body
+    );
+    if (!game) return respond(res, 404, false, 'Game or review not found.', null, null);
+    respond(res, 200, true, 'Review updated successfully.', game.reviews);
+  } catch (err) {
+    respond(res, 400, false, 'Failed to update review.', null, err.message);
+  }
+};
+
+/**
+ * DELETE /api/games/:appid/reviews/:reviewId
+ */
+export const deleteReview = async (req, res) => {
+  try {
+    const game = await gameService.deleteReview(
+      req.params.appid,
+      req.params.reviewId
+    );
+    if (!game) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'Review deleted successfully.', game.reviews);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to delete review.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/system-requirements
+ */
+export const getSystemRequirements = async (req, res) => {
+  try {
+    const data = await gameService.getSystemRequirements(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'System requirements fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch system requirements.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/dlc
+ */
+export const getDLC = async (req, res) => {
+  try {
+    const data = await gameService.getDLC(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'DLC fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch DLC.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/achievements
+ */
+export const getAchievements = async (req, res) => {
+  try {
+    const data = await gameService.getAchievements(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'Achievements fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch achievements.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/leaderboard
+ */
+export const getLeaderboards = async (req, res) => {
+  try {
+    const data = await gameService.getLeaderboards(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'Leaderboard fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch leaderboard.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/updates
+ */
+export const getUpdates = async (req, res) => {
+  try {
+    const data = await gameService.getUpdates(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'Updates fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch updates.', null, err.message);
+  }
+};
+
+/**
+ * GET /api/games/:appid/news
+ */
+export const getNews = async (req, res) => {
+  try {
+    const data = await gameService.getNews(req.params.appid);
+    if (data === null) return respond(res, 404, false, 'Game not found.', null, null);
+    respond(res, 200, true, 'News fetched successfully.', data);
+  } catch (err) {
+    respond(res, 500, false, 'Failed to fetch news.', null, err.message);
+  }
+};
+
+
