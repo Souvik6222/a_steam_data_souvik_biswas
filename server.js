@@ -10,6 +10,8 @@ import searchRoutes      from './src/routes/searchRoutes.js';
 import authRoutes        from './src/routes/authRoutes.js';
 import jwtRoutes         from './src/routes/jwtRoutes.js';
 import middlewareRoutes  from './src/routes/middlewareRoutes.js';
+import analyticsRoutes  from './src/routes/analyticsRoutes.js';
+import statsRoutes       from './src/routes/statsRoutes.js';
 
 // ── Middlewares ──────────────────────────────────────────────────
 import requestLogger     from './src/middlewares/requestLogger.js';
@@ -47,6 +49,8 @@ app.use('/api/v1/search',            searchRoutes);
 app.use('/api/v1/auth',              authRoutes);
 app.use('/api/v1/jwt',               jwtRoutes);
 app.use('/api/v1/middleware',        middlewareRoutes);
+app.use('/api/v1/analytics',         analyticsRoutes);
+app.use('/api/v1/stats',             statsRoutes);
 
 // ── 4. 404 fallback ──────────────────────────────────────────────
 app.use(notFound);
