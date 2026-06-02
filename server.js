@@ -10,8 +10,10 @@ import searchRoutes      from './src/routes/searchRoutes.js';
 import authRoutes        from './src/routes/authRoutes.js';
 import jwtRoutes         from './src/routes/jwtRoutes.js';
 import middlewareRoutes  from './src/routes/middlewareRoutes.js';
-import analyticsRoutes  from './src/routes/analyticsRoutes.js';
+import analyticsRoutes   from './src/routes/analyticsRoutes.js';
 import statsRoutes       from './src/routes/statsRoutes.js';
+import adminRoutes       from './src/routes/adminRoutes.js';
+import protectedRoutes   from './src/routes/protectedRoutes.js';
 
 // ── Middlewares ──────────────────────────────────────────────────
 import requestLogger     from './src/middlewares/requestLogger.js';
@@ -51,6 +53,8 @@ app.use('/api/v1/jwt',               jwtRoutes);
 app.use('/api/v1/middleware',        middlewareRoutes);
 app.use('/api/v1/analytics',         analyticsRoutes);
 app.use('/api/v1/stats',             statsRoutes);
+app.use('/api/v1/admin',             adminRoutes);       // JWT + role:admin required
+app.use('/api/v1/protected',         protectedRoutes);   // JWT required
 
 // ── 4. 404 fallback ──────────────────────────────────────────────
 app.use(notFound);
