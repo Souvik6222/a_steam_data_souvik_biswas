@@ -15,6 +15,7 @@ import mongoose   from 'mongoose';
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join }  from 'path';
+import { addHeadOptions } from '../utils/httpMethods.js';
 
 const router = Router();
 
@@ -82,5 +83,10 @@ router.get('/system/version', async (req, res, next) => {
     next(err);
   }
 });
+
+// ── HEAD + OPTIONS ────────────────────────────────────────────────────────────
+addHeadOptions(router, '/health',         'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/system/info',    'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/system/version', 'GET, HEAD, OPTIONS');
 
 export default router;
