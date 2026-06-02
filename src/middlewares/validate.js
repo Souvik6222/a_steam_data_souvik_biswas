@@ -4,13 +4,14 @@
  * express-validator rule chains + a shared result-checker middleware.
  *
  * Usage (in a route file):
- *   import { validateGame, validateAuth } from '../middlewares/validate.js';
+ *   import { validateGame, validateAuth, validateQueryPage, validateQueryRating } from '../middlewares/validate.js';
  *
- *   router.post('/games',    validateGame,    createGame);
- *   router.post('/register', validateAuth,    register);
+ *   router.get('/games',    validateQueryPage,   getAllGames);
+ *   router.post('/games',   validateGame,        createGame);
+ *   router.post('/register', validateAuth,       register);
  */
 
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 
 // ── Shared result checker ────────────────────────────────────────
 /**
@@ -36,10 +37,10 @@ const handleValidationErrors = (req, res, next) => {
 // ── validateGame ─────────────────────────────────────────────────
 // Applied to: POST /games (create a new game)
 export const validateGame = [
-  body('name')
+  body('title')
     .trim()
-    .notEmpty().withMessage('Game name is required')
-    .isLength({ max: 200 }).withMessage('Game name must be at most 200 characters'),
+    .notEmpty().withMessage('Game title is required')
+    .isLength({ max: 200 }).withMessage('Game title must be at most 200 characters'),
 
   body('appid')
     .notEmpty().withMessage('appid is required')
@@ -53,9 +54,9 @@ export const validateGame = [
     .optional()
     .isFloat({ min: 0, max: 10 }).withMessage('Rating must be between 0 and 10'),
 
-  body('genre')
+  body('genres')
     .optional()
-    .isArray().withMessage('genre must be an array of strings'),
+    .isArray().withMessage('genres must be an array of strings'),
 
   body('developer')
     .optional()
@@ -67,15 +68,15 @@ export const validateGame = [
     .trim()
     .isLength({ max: 150 }).withMessage('Publisher name must be at most 150 characters'),
 
-  body('releaseDate')
+  body('release_date')
     .optional()
-    .isISO8601().withMessage('releaseDate must be a valid ISO 8601 date'),
+    .isISO8601().withMessage('release_date must be a valid ISO 8601 date'),
 
   handleValidationErrors,
 ];
 
 // ── validateAuth ─────────────────────────────────────────────────
-// Applied to: POST /register  and  POST /login
+// Applied to: POST /register
 export const validateAuth = [
   body('email')
     .trim()
@@ -94,6 +95,44 @@ export const validateAuth = [
     .trim()
     .isLength({ min: 3, max: 30 }).withMessage('Username must be 3–30 characters')
     .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username may only contain letters, numbers, and underscores'),
+
+  handleValidationErrors,
+];
+
+// ── validateQueryPage ────────────────────────────────────────────
+// Applied to: any GET with ?page= query param
+export const validateQueryPage = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 }).withMessage('page must be a positive integer')
+    .toInt(),
+
+  handleValidationErrors,
+];
+
+// ── validateQueryRating ──────────────────────────────────────────
+// Applied to: any GET with ?rating= query param
+export const validateQueryRating = [
+  query('rating')
+    .optional()
+    .isFloat({ min: 0, max: 10 }).withMessage('rating must be between 0 and 10')
+    .toFloat(),
+
+  handleValidationErrors,
+];
+
+// ── validateQueryPagination ──────────────────────────────────────
+// Combines page + rating validation for the main games list route
+export const validateGameListQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 }).withMessage('page must be a positive integer')
+    .toInt(),
+
+  query('rating')
+    .optional()
+    .isFloat({ min: 0, max: 10 }).withMessage('rating must be between 0 and 10')
+    .toFloat(),
 
   handleValidationErrors,
 ];

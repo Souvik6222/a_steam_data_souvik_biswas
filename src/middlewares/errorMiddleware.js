@@ -141,6 +141,26 @@ const availableRoutes = {
     'GET /api/v1/middleware/rate-limit':    'Rate-limit demo',
     'GET /api/v1/middleware/error-handler': 'Error handler demo (?type=validation|cast|duplicate|custom)',
   },
+  'Advanced': {
+    'GET /api/v1/games/random':                  'Random game',
+    'GET /api/v1/recommendations/games/:appid':  'Game recommendations',
+    'GET /api/v1/trending/games':                'Trending games (last 90 days)',
+    'GET /api/v1/compare/games/:id1/:id2':       'Compare two games side-by-side',
+    'GET /api/v1/timeline/game/:appid':          'Game update timeline',
+    'GET /api/v1/activity/logs':                 'Last 20 request logs',
+    'GET /api/v1/news/latest':                   'Latest news (mock)',
+    'GET /api/v1/news/trending':                 'Trending news (mock)',
+  },
+  'Notifications': {
+    'GET    /api/v1/notifications':            'List all notifications',
+    'PATCH  /api/v1/notifications/read/:id':   'Mark notification as read',
+    'DELETE /api/v1/notifications/:id':        'Delete a notification',
+  },
+  'System': {
+    'GET /api/v1/health':          'Health check (status, uptime, timestamp)',
+    'GET /api/v1/system/info':     'System info (node version, env, DB status)',
+    'GET /api/v1/system/version':  'API version from package.json',
+  },
 };
 
 export const notFound = (req, res, _next) => {

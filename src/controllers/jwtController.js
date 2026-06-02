@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import * as gameService from '../services/gameService.js';
+import catchAsync from '../utils/catchAsync.js';
 
 // ── Shared response helper (matches project convention) ───────────────────────
 
@@ -130,14 +131,10 @@ export const revokeToken = (req, res) => {
  * Auth-guarded mirror of GET /api/games.
  * Delegates to gameService.getAllGames with the same query-string support.
  */
-export const getPrivateGames = async (req, res) => {
-  try {
-    const result = await gameService.getAllGames(req.query);
-    respond(res, 200, true, 'Private games fetched successfully.', result);
-  } catch (err) {
-    respond(res, 500, false, 'Failed to fetch private games.', null, err.message);
-  }
-};
+export const getPrivateGames = catchAsync(async (req, res) => {
+  const result = await gameService.getAllGames(req.query);
+  respond(res, 200, true, 'Private games fetched successfully.', result);
+});
 
 // ── GET /api/v1/jwt/private-analytics ────────────────────────────────────────
 /**
@@ -145,54 +142,50 @@ export const getPrivateGames = async (req, res) => {
  * Aggregates: total game count, free / paid split, average rating,
  * top genres, and the most-downloaded game.
  */
-export const getPrivateAnalytics = async (req, res) => {
-  try {
-    // Fetch all games once for in-memory aggregation.
-    // For large collections, replace with Mongoose aggregation pipelines.
-    const { games = [], total = 0 } = await gameService.getAllGames({ limit: 0 });
+export const getPrivateAnalytics = catchAsync(async (req, res) => {
+  // Fetch all games once for in-memory aggregation.
+  // For large collections, replace with Mongoose aggregation pipelines.
+  const { data: games = [], total = 0 } = await gameService.getAllGames({ limit: 0 });
 
-    const freeCount = games.filter((g) => g.price === 0).length;
-    const paidCount = total - freeCount;
+  const freeCount = games.filter((g) => g.price === 0).length;
+  const paidCount = total - freeCount;
 
-    const ratings = games.map((g) => g.rating).filter((r) => typeof r === 'number');
-    const avgRating =
-      ratings.length > 0
-        ? parseFloat((ratings.reduce((s, r) => s + r, 0) / ratings.length).toFixed(2))
-        : null;
+  const ratings = games.map((g) => g.rating).filter((r) => typeof r === 'number');
+  const avgRating =
+    ratings.length > 0
+      ? parseFloat((ratings.reduce((s, r) => s + r, 0) / ratings.length).toFixed(2))
+      : null;
 
-    // Tally genres
-    const genreMap = {};
-    for (const game of games) {
-      for (const genre of game.genres ?? []) {
-        genreMap[genre] = (genreMap[genre] ?? 0) + 1;
-      }
+  // Tally genres
+  const genreMap = {};
+  for (const game of games) {
+    for (const genre of game.genres ?? []) {
+      genreMap[genre] = (genreMap[genre] ?? 0) + 1;
     }
-    const topGenres = Object.entries(genreMap)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([genre, count]) => ({ genre, count }));
-
-    // Most-downloaded game
-    const mostDownloaded =
-      games.length > 0
-        ? games.reduce(
-            (best, g) => ((g.downloads ?? 0) > (best.downloads ?? 0) ? g : best),
-            games[0],
-          )
-        : null;
-
-    respond(res, 200, true, 'Analytics summary fetched successfully.', {
-      totalGames: total,
-      freeGames: freeCount,
-      paidGames: paidCount,
-      averageRating: avgRating,
-      topGenres,
-      mostDownloaded: mostDownloaded
-        ? { appid: mostDownloaded.appid, title: mostDownloaded.title, downloads: mostDownloaded.downloads }
-        : null,
-      generatedAt: new Date().toISOString(),
-    });
-  } catch (err) {
-    respond(res, 500, false, 'Failed to fetch analytics.', null, err.message);
   }
-};
+  const topGenres = Object.entries(genreMap)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([genre, count]) => ({ genre, count }));
+
+  // Most-downloaded game
+  const mostDownloaded =
+    games.length > 0
+      ? games.reduce(
+          (best, g) => ((g.downloads ?? 0) > (best.downloads ?? 0) ? g : best),
+          games[0],
+        )
+      : null;
+
+  respond(res, 200, true, 'Analytics summary fetched successfully.', {
+    totalGames: total,
+    freeGames: freeCount,
+    paidGames: paidCount,
+    averageRating: avgRating,
+    topGenres,
+    mostDownloaded: mostDownloaded
+      ? { appid: mostDownloaded.appid, title: mostDownloaded.title, downloads: mostDownloaded.downloads }
+      : null,
+    generatedAt: new Date().toISOString(),
+  });
+});

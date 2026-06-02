@@ -11,12 +11,13 @@ import {
   verifyEmail,
 } from '../controllers/authController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
+import { validateAuth } from '../middlewares/validate.js';
 
 const router = Router();
 
 // ── Public routes ─────────────────────────────────────────────────────────────
 router.route('/register')
-  .post(register)
+  .post(validateAuth, register)
   .get((req, res) => {
     res.status(405).json({
       success: false,
