@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
       default: 'user',
     },
 
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+
     isVerified: {
       type: Boolean,
       default: false,
@@ -73,7 +78,7 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// ─── Instance Method ──────────────────────────────────────────────────────────
+// ─── Instance Methods ──────────────────────────────────────────────────────────
 /**
  * Compare a plain-text candidate password against the stored hashed password.
  * @param {string} candidatePassword - The plain-text password to verify.
@@ -83,6 +88,15 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
+/**
+ * Compare a plain-text entered password against the stored hashed password.
+ * @param {string} enteredPassword - The plain-text password to verify.
+ * @returns {Promise<boolean>} Resolves to true if passwords match.
+ */
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return bcrypt.compare(enteredPassword, this.password);
+};
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default User;
