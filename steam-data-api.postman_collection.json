@@ -1,441 +1,471 @@
 {
   "info": {
-    "name": "Steam Data API",
-    "description": "Complete Postman collection for the Steam Data REST API.\n\nSet the `baseUrl` collection variable to your server URL before use.\nDefault: http://localhost:5000\n\nAuthentication:\n1. POST /api/v1/auth/register  → creates account\n2. POST /api/v1/auth/login     → returns token\n3. Copy token into the `token` collection variable\n4. All protected requests will use Bearer {{token}} automatically.",
+    "_postman_id": "steam-data-api-v1-complete",
+    "name": "🎮 Steam Data API — Complete",
+    "description": "# Steam Data API — Full Collection\n\nA production-ready REST API for Steam game data. This collection covers **every** endpoint across all route groups.\n\n---\n\n## ⚡ Quick Setup\n\n1. **Import** this file into Postman (`File → Import`)\n2. Click the collection name → **Variables** tab\n3. Set `baseUrl` to your server (default: `http://localhost:5000`)\n4. Run **Register** or **Login** and copy the returned `token`\n5. Paste the token into the `token` collection variable\n6. All 🔐 protected requests will use it automatically via `Bearer {{token}}`\n\n---\n\n## 🗂 Folder Structure\n\n| # | Folder | Mount Point | Count |\n|---|---|---|---|\n| 1 | 🎮 Games — CRUD | `/api/games` | 8 |\n| 2 | 📁 Games — Sub-Resources | `/api/games/:appid/...` | 14 |\n| 3 | 🏷️ Games — Filters | `/api/games/filter/...` | 15 |\n| 4 | 📊 Games — Sort | `/api/games/sort/...` | 5 |\n| 5 | 🔍 Games — Param Search | `/api/games/genre/:genre` etc | 9 |\n| 6 | 🔎 Search | `/api/v1/search` | 1 |\n| 7 | 🔐 Auth | `/api/v1/auth` | 9 |\n| 8 | 🔑 JWT | `/api/v1/jwt` | 8 |\n| 9 | 🛡️ Protected (JWT Write) | `/api/v1/protected` | 3 |\n| 10 | 📈 Analytics | `/api/v1/analytics` | 10 |\n| 11 | 📉 Stats | `/api/v1/stats` | 10 |\n| 12 | 🚀 Advanced | `/api/v1` | 8 |\n| 13 | 🛡️ Admin | `/api/v1/admin` | 3 |\n| 14 | 🔔 Notifications | `/api/v1/notifications` | 3 |\n| 15 | ⚙️ System | `/api/v1` | 3 |\n| 16 | 🧪 Middleware Demo | `/api/v1/middleware` | 4 |\n| 17 | 👤 Legacy Users | `/api/users` | 3 |\n\n---\n\n## 🔐 Authentication\n\n```\nPOST /api/v1/auth/register  → create account\nPOST /api/v1/auth/login     → get token in response.data.token\n```\n\nSet the `token` variable, then every request marked 🔐 sends:\n```\nAuthorization: Bearer {{token}}\n```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:5000",
-      "type": "string",
-      "description": "Base URL of the Steam Data API server"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string",
-      "description": "JWT bearer token — set after a successful login"
-    },
-    {
-      "key": "appid",
-      "value": "3057270",
-      "type": "string",
-      "description": "Default Steam appid used in parameterised requests"
-    }
+    { "key": "baseUrl",  "value": "http://localhost:5000", "type": "string",      "description": "Server base URL" },
+    { "key": "token",    "value": "",                      "type": "string",      "description": "JWT — paste here after login" },
+    { "key": "appid",    "value": "3057270",               "type": "string",      "description": "Steam appid used in param requests" },
+    { "key": "reviewId", "value": "",                      "type": "string",      "description": "MongoDB _id of a review subdocument" }
   ],
   "auth": {
     "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{token}}",
-        "type": "string"
-      }
-    ]
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
   },
   "item": [
+
     {
-      "name": "🎮 Games",
-      "description": "Core game CRUD — /api/games",
+      "name": "🎮 Games — CRUD",
+      "description": "Core game Create / Read / Update / Delete.\nBase: `{{baseUrl}}/api/games`",
       "item": [
         {
-          "name": "List Games",
+          "name": "GET  List All Games",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/games?page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games"],
+              "host": ["{{baseUrl}}"], "path": ["api","games"],
               "query": [
-                { "key": "page",  "value": "1" },
-                { "key": "limit", "value": "20" },
-                { "key": "genre", "value": "",  "disabled": true },
-                { "key": "rating","value": "",  "disabled": true }
+                { "key": "page",      "value": "1",    "description": "Page number (≥1)" },
+                { "key": "limit",     "value": "20",   "description": "Results per page" },
+                { "key": "genre",     "value": "",     "description": "Filter by genre e.g. Action", "disabled": true },
+                { "key": "developer", "value": "",     "description": "Filter by developer name",    "disabled": true },
+                { "key": "rating",    "value": "",     "description": "Min rating 0-10",             "disabled": true },
+                { "key": "sort",      "value": "",     "description": "rating|downloads|price",      "disabled": true },
+                { "key": "platform",  "value": "",     "description": "windows|mac|linux",           "disabled": true }
               ]
             },
-            "description": "Fetch all non-deleted games. Supports ?page, ?limit, ?genre, ?rating, ?sort."
-          }
+            "description": "Fetch all non-deleted games. Supports pagination and filtering via query params."
+          },
+          "response": []
         },
         {
-          "name": "Get Game by appid",
+          "name": "GET  Get Game by appid",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/games/{{appid}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}"]
-            }
-          }
+              "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}"]
+            },
+            "description": "Fetch a single game by its Steam appid."
+          },
+          "response": []
         },
         {
-          "name": "Create Game",
+          "name": "POST Create Game",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
               "raw": "{{baseUrl}}/api/games",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games"]
+              "host": ["{{baseUrl}}"], "path": ["api","games"]
             },
             "body": {
               "mode": "raw",
               "options": { "raw": { "language": "json" } },
-              "raw": "{\n  \"appid\": 9999999,\n  \"title\": \"Test Game\",\n  \"description\": \"A test game created via the API.\",\n  \"developer\": \"Test Studio\",\n  \"publisher\": \"Test Publisher\",\n  \"release_date\": \"2024-01-15\",\n  \"genres\": [\"Action\", \"Indie\"],\n  \"tags\": [\"Single-player\"],\n  \"price\": {\n    \"original\": 9.99,\n    \"discounted\": 7.99,\n    \"discount_percent\": 20,\n    \"isFree\": false\n  },\n  \"rating\": 8.5,\n  \"downloads\": 12000,\n  \"isSingleplayer\": true,\n  \"isIndieGame\": true\n}"
+              "raw": "{\n  \"appid\": 9999001,\n  \"title\": \"My Test Game\",\n  \"description\": \"A sample game created through the API for testing purposes.\",\n  \"developer\": \"Test Studio\",\n  \"publisher\": \"Test Publisher\",\n  \"release_date\": \"2024-06-01\",\n  \"genres\": [\"Action\", \"Indie\"],\n  \"tags\": [\"Single-player\", \"Family Sharing\"],\n  \"price\": {\n    \"original\": 14.99,\n    \"discounted\": 9.99,\n    \"discount_percent\": 33,\n    \"isFree\": false\n  },\n  \"rating\": 8.5,\n  \"downloads\": 25000,\n  \"platforms\": {\n    \"windows\": true,\n    \"mac\": false,\n    \"linux\": true\n  },\n  \"isSingleplayer\": true,\n  \"isIndie\": true,\n  \"hasControllerSupport\": true\n}"
             },
-            "description": "Create a new game. Required: title, appid. rating must be 0–10, price ≥ 0, release_date must be ISO 8601."
-          }
+            "description": "Create a new game.\n\n**Required fields:** `title`, `appid` (positive integer)\n**Optional:** `rating` must be 0–10, `price` ≥ 0, `release_date` must be ISO 8601"
+          },
+          "response": []
         },
         {
-          "name": "Update Game (PATCH)",
-          "request": {
-            "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}"]
-            },
-            "body": {
-              "mode": "raw",
-              "options": { "raw": { "language": "json" } },
-              "raw": "{\n  \"rating\": 9.0,\n  \"downloads\": 50000\n}"
-            }
-          }
-        },
-        {
-          "name": "Replace Game (PUT)",
+          "name": "PUT  Replace Game (full)",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
               "raw": "{{baseUrl}}/api/games/{{appid}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}"]
+              "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}"]
             },
             "body": {
               "mode": "raw",
               "options": { "raw": { "language": "json" } },
-              "raw": "{\n  \"title\": \"Replaced Game Title\",\n  \"developer\": \"New Studio\",\n  \"publisher\": \"New Publisher\",\n  \"genres\": [\"RPG\"],\n  \"rating\": 7.5\n}"
-            }
-          }
+              "raw": "{\n  \"title\": \"Replaced Game Title\",\n  \"developer\": \"New Developer Studio\",\n  \"publisher\": \"New Publisher\",\n  \"description\": \"Completely replaced document via PUT.\",\n  \"genres\": [\"RPG\", \"Strategy\"],\n  \"rating\": 7.5,\n  \"downloads\": 10000,\n  \"price\": {\n    \"original\": 19.99,\n    \"discounted\": 19.99,\n    \"discount_percent\": 0,\n    \"isFree\": false\n  }\n}"
+            },
+            "description": "Full replacement — replaces the entire document. Fields not provided will be reset to schema defaults."
+          },
+          "response": []
         },
         {
-          "name": "Delete Game",
+          "name": "PATCH Update Game (partial)",
           "request": {
-            "method": "DELETE",
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
               "raw": "{{baseUrl}}/api/games/{{appid}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}"]
-            }
-          }
-        },
-        {
-          "name": "Archive Game (Soft Delete)",
-          "request": {
-            "method": "PATCH",
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/archive",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "archive"]
-            }
-          }
-        },
-        {
-          "name": "Restore Game",
-          "request": {
-            "method": "PATCH",
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/restore",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "restore"]
-            }
-          }
-        },
-        {
-          "name": "Game Exists",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/exists",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "exists"]
-            }
-          }
-        },
-        {
-          "name": "Game Summary",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/summary",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "summary"]
-            }
-          }
-        },
-        {
-          "name": "HEAD /api/games",
-          "request": {
-            "method": "HEAD",
-            "url": {
-              "raw": "{{baseUrl}}/api/games",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games"]
-            },
-            "description": "Returns Content-Type and Allow headers. No body."
-          }
-        },
-        {
-          "name": "OPTIONS /api/games",
-          "request": {
-            "method": "OPTIONS",
-            "url": {
-              "raw": "{{baseUrl}}/api/games",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "📖 Reviews",
-      "description": "Game review sub-resource — /api/games/:appid/reviews",
-      "item": [
-        {
-          "name": "Get Reviews",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/reviews",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "reviews"]
-            }
-          }
-        },
-        {
-          "name": "Add Review",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/reviews",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "reviews"]
+              "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}"]
             },
             "body": {
               "mode": "raw",
               "options": { "raw": { "language": "json" } },
-              "raw": "{\n  \"user\": \"SteamUser123\",\n  \"comment\": \"An absolutely fantastic game. Highly recommended!\",\n  \"score\": 9\n}"
-            }
-          }
-        },
-        {
-          "name": "Update Review",
-          "request": {
-            "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/reviews/:reviewId",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "reviews", ":reviewId"],
-              "variable": [{ "key": "reviewId", "value": "" }]
+              "raw": "{\n  \"rating\": 9.1,\n  \"downloads\": 75000,\n  \"description\": \"Updated description after patch.\"\n}"
             },
-            "body": {
-              "mode": "raw",
-              "options": { "raw": { "language": "json" } },
-              "raw": "{\n  \"score\": 8,\n  \"comment\": \"Updated review after more playtime.\"\n}"
-            }
-          }
+            "description": "Partial update — only fields provided are changed. Safe for single-field updates."
+          },
+          "response": []
         },
         {
-          "name": "Delete Review",
+          "name": "DELETE Delete Game (hard)",
           "request": {
             "method": "DELETE",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/games/{{appid}}/reviews/:reviewId",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "games", "{{appid}}", "reviews", ":reviewId"],
-              "variable": [{ "key": "reviewId", "value": "" }]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "🔍 Sub-Resources",
-      "description": "Per-game sub-resources — screenshots, trailers, DLC, achievements, etc.",
-      "item": [
-        {
-          "name": "Screenshots",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/screenshots", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","screenshots"] } }
+              "raw": "{{baseUrl}}/api/games/{{appid}}",
+              "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}"]
+            },
+            "description": "Permanently removes the game from the database. This cannot be undone.\nFor reversible deletion use PATCH /:appid/archive."
+          },
+          "response": []
         },
         {
-          "name": "Trailers",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/trailers", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","trailers"] } }
-        },
-        {
-          "name": "DLC",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/dlc", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","dlc"] } }
-        },
-        {
-          "name": "Achievements",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/achievements", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","achievements"] } }
-        },
-        {
-          "name": "Leaderboard",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/leaderboard", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","leaderboard"] } }
-        },
-        {
-          "name": "Updates",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/updates", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","updates"] } }
-        },
-        {
-          "name": "News",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/news", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","news"] } }
-        },
-        {
-          "name": "System Requirements",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/system-requirements", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","system-requirements"] } }
-        }
-      ]
-    },
-    {
-      "name": "🏷️ Filters & Sort",
-      "description": "Static filter and sort routes — registered BEFORE /:appid",
-      "item": [
-        { "name": "Free to Play",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/free-to-play",       "host": ["{{baseUrl}}"], "path": ["api","games","filter","free-to-play"] } } },
-        { "name": "Paid Games",           "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/paid",               "host": ["{{baseUrl}}"], "path": ["api","games","filter","paid"] } } },
-        { "name": "Discounted",           "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/discounted",          "host": ["{{baseUrl}}"], "path": ["api","games","filter","discounted"] } } },
-        { "name": "Early Access",         "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/early-access",       "host": ["{{baseUrl}}"], "path": ["api","games","filter","early-access"] } } },
-        { "name": "Multiplayer",          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/multiplayer",        "host": ["{{baseUrl}}"], "path": ["api","games","filter","multiplayer"] } } },
-        { "name": "Singleplayer",         "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/singleplayer",       "host": ["{{baseUrl}}"], "path": ["api","games","filter","singleplayer"] } } },
-        { "name": "Co-op",                "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/coop",               "host": ["{{baseUrl}}"], "path": ["api","games","filter","coop"] } } },
-        { "name": "Horror",               "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/horror",             "host": ["{{baseUrl}}"], "path": ["api","games","filter","horror"] } } },
-        { "name": "Indie",                "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/indie",              "host": ["{{baseUrl}}"], "path": ["api","games","filter","indie"] } } },
-        { "name": "Top Rated",            "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/filter/top-rated",          "host": ["{{baseUrl}}"], "path": ["api","games","filter","top-rated"] } } },
-        { "name": "Sort by Rating",       "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/sort/rating-desc",          "host": ["{{baseUrl}}"], "path": ["api","games","sort","rating-desc"] } } },
-        { "name": "Sort by Downloads",    "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/sort/downloads-desc",       "host": ["{{baseUrl}}"], "path": ["api","games","sort","downloads-desc"] } } },
-        { "name": "Sort by Price",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/sort/price-desc",           "host": ["{{baseUrl}}"], "path": ["api","games","sort","price-desc"] } } },
-        { "name": "Sort by Release Date", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/games/sort/releaseDate-desc",     "host": ["{{baseUrl}}"], "path": ["api","games","sort","releaseDate-desc"] } } }
-      ]
-    },
-    {
-      "name": "🔎 Search",
-      "description": "Full-text search — /api/v1/search",
-      "item": [
-        {
-          "name": "Search Games",
+          "name": "PATCH Archive Game (soft delete)",
           "request": {
-            "method": "GET",
+            "method": "PATCH",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/search?q=action&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "search"],
-              "query": [
-                { "key": "q",     "value": "action" },
-                { "key": "page",  "value": "1" },
-                { "key": "limit", "value": "20" }
-              ]
-            }
-          }
+              "raw": "{{baseUrl}}/api/games/{{appid}}/archive",
+              "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","archive"]
+            },
+            "description": "Sets `isDeleted: true`. Game is hidden from public listing but not removed from DB."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Restore Game",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/games/{{appid}}/restore",
+              "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","restore"]
+            },
+            "description": "Restores a soft-deleted game. Sets `isDeleted: false`."
+          },
+          "response": []
         }
       ]
     },
+
     {
-      "name": "🔐 Auth",
-      "description": "Authentication — /api/v1/auth",
+      "name": "📁 Games — Sub-Resources",
+      "description": "Per-game sub-resource endpoints.\nBase: `{{baseUrl}}/api/games/{{appid}}/...`",
       "item": [
         {
-          "name": "Register",
+          "name": "GET  Check Existence",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/exists", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","exists"] },
+            "description": "Returns `{ exists: true/false }` for the given appid." }
+        },
+        {
+          "name": "GET  Game Summary",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/summary", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","summary"] },
+            "description": "Lightweight projection: title, rating, price, genres, platforms." }
+        },
+        {
+          "name": "GET  Related Games",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/related", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","related"] },
+            "description": "Games that share genres with this game, excluding itself." }
+        },
+        {
+          "name": "GET  Screenshots",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/screenshots", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","screenshots"] } }
+        },
+        {
+          "name": "GET  Trailers",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/trailers", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","trailers"] } }
+        },
+        {
+          "name": "GET  Reviews",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/reviews", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","reviews"] } }
+        },
+        {
+          "name": "POST Add Review",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "register"]
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/reviews", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","reviews"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"user\": \"SteamUser123\",\n  \"comment\": \"Absolutely incredible game. Spent 200+ hours and still going strong!\",\n  \"score\": 9\n}"
             },
+            "description": "Add a review. `score` must be 0–10."
+          }
+        },
+        {
+          "name": "PATCH Update Review",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/games/{{appid}}/reviews/{{reviewId}}",
+              "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","reviews","{{reviewId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"score\": 8,\n  \"comment\": \"Updated after more playtime — still great but noticed some bugs.\"\n}"
+            },
+            "description": "Update review fields. Set `reviewId` collection variable first."
+          }
+        },
+        {
+          "name": "DELETE Remove Review",
+          "request": { "method": "DELETE", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/reviews/{{reviewId}}", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","reviews","{{reviewId}}"] },
+            "description": "Removes a review subdocument by its MongoDB _id." }
+        },
+        {
+          "name": "GET  DLC List",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/dlc", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","dlc"] } }
+        },
+        {
+          "name": "GET  Achievements",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/achievements", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","achievements"] } }
+        },
+        {
+          "name": "GET  Leaderboard",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/leaderboard", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","leaderboard"] },
+            "description": "Returns top 10 games by rating as a leaderboard for this game's genre." }
+        },
+        {
+          "name": "GET  Update History",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/update-history", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","update-history"] } }
+        },
+        {
+          "name": "GET  Updates",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/updates", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","updates"] } }
+        },
+        {
+          "name": "GET  News",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/news", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","news"] },
+            "description": "Returns 3 dynamically generated news articles based on the game's actual data." }
+        },
+        {
+          "name": "GET  System Requirements",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/{{appid}}/system-requirements", "host": ["{{baseUrl}}"], "path": ["api","games","{{appid}}","system-requirements"] } }
+        }
+      ]
+    },
+
+    {
+      "name": "🏷️ Games — Filters",
+      "description": "Static boolean filter routes. All return paginated game lists.\nBase: `{{baseUrl}}/api/games/filter/...`\n\n> These are registered BEFORE `/:appid` routes in Express to avoid path conflicts.",
+      "item": [
+        { "name": "Free to Play",         "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/free-to-play",       "host": ["{{baseUrl}}"], "path": ["api","games","filter","free-to-play"]       } } },
+        { "name": "Paid Games",           "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/paid",               "host": ["{{baseUrl}}"], "path": ["api","games","filter","paid"]               } } },
+        { "name": "Discounted",           "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/discounted",          "host": ["{{baseUrl}}"], "path": ["api","games","filter","discounted"]         } } },
+        { "name": "Early Access",         "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/early-access",       "host": ["{{baseUrl}}"], "path": ["api","games","filter","early-access"]       } } },
+        { "name": "VR Only",              "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/vr-only",             "host": ["{{baseUrl}}"], "path": ["api","games","filter","vr-only"]            } } },
+        { "name": "Controller Support",   "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/controller-support",  "host": ["{{baseUrl}}"], "path": ["api","games","filter","controller-support"] } } },
+        { "name": "Multiplayer",          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/multiplayer",         "host": ["{{baseUrl}}"], "path": ["api","games","filter","multiplayer"]        } } },
+        { "name": "Singleplayer",         "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/singleplayer",        "host": ["{{baseUrl}}"], "path": ["api","games","filter","singleplayer"]       } } },
+        { "name": "Co-op",               "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/coop",                "host": ["{{baseUrl}}"], "path": ["api","games","filter","coop"]               } } },
+        { "name": "Open World",           "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/open-world",          "host": ["{{baseUrl}}"], "path": ["api","games","filter","open-world"]         } } },
+        { "name": "Survival",             "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/survival",            "host": ["{{baseUrl}}"], "path": ["api","games","filter","survival"]           } } },
+        { "name": "Horror",               "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/horror",              "host": ["{{baseUrl}}"], "path": ["api","games","filter","horror"]             } } },
+        { "name": "Anime",                "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/anime",               "host": ["{{baseUrl}}"], "path": ["api","games","filter","anime"]              } } },
+        { "name": "Indie",                "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/indie",               "host": ["{{baseUrl}}"], "path": ["api","games","filter","indie"]              } } },
+        { "name": "Top Rated (≥8.0)",     "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/filter/top-rated",           "host": ["{{baseUrl}}"], "path": ["api","games","filter","top-rated"]          } } }
+      ]
+    },
+
+    {
+      "name": "📊 Games — Sort",
+      "description": "Pre-sorted game lists.\nBase: `{{baseUrl}}/api/games/sort/...`",
+      "item": [
+        { "name": "By Rating (desc)",       "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/sort/rating-desc",      "host": ["{{baseUrl}}"], "path": ["api","games","sort","rating-desc"]      } } },
+        { "name": "By Downloads (desc)",    "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/sort/downloads-desc",   "host": ["{{baseUrl}}"], "path": ["api","games","sort","downloads-desc"]   } } },
+        { "name": "By Price (desc)",        "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/sort/price-desc",       "host": ["{{baseUrl}}"], "path": ["api","games","sort","price-desc"]       } } },
+        { "name": "By Release Date (desc)", "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/sort/releaseDate-desc", "host": ["{{baseUrl}}"], "path": ["api","games","sort","releaseDate-desc"] } } },
+        { "name": "By Popularity (desc)",   "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/games/sort/popularity-desc",  "host": ["{{baseUrl}}"], "path": ["api","games","sort","popularity-desc"]  } } }
+      ]
+    },
+
+    {
+      "name": "🔍 Games — Param Search",
+      "description": "Find games by a specific attribute value.\nBase: `{{baseUrl}}/api/games/{attribute}/{value}`",
+      "item": [
+        {
+          "name": "By Genre",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/genre/Action", "host": ["{{baseUrl}}"], "path": ["api","games","genre","Action"] },
+            "description": "Replace `Action` with any genre e.g. RPG, Indie, Strategy" }
+        },
+        {
+          "name": "By Developer",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/developer/Valve", "host": ["{{baseUrl}}"], "path": ["api","games","developer","Valve"] } }
+        },
+        {
+          "name": "By Publisher",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/publisher/EA", "host": ["{{baseUrl}}"], "path": ["api","games","publisher","EA"] } }
+        },
+        {
+          "name": "By Platform",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/platform/linux", "host": ["{{baseUrl}}"], "path": ["api","games","platform","linux"] },
+            "description": "Platform values: `windows`, `mac`, `linux`" }
+        },
+        {
+          "name": "By Tag",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/tag/roguelike", "host": ["{{baseUrl}}"], "path": ["api","games","tag","roguelike"] } }
+        },
+        {
+          "name": "By Release Year",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/release-year/2024", "host": ["{{baseUrl}}"], "path": ["api","games","release-year","2024"] } }
+        },
+        {
+          "name": "By Min Rating",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/rating/8", "host": ["{{baseUrl}}"], "path": ["api","games","rating","8"] },
+            "description": "Returns games with rating ≥ the given value (0–10)" }
+        },
+        {
+          "name": "By Max Price",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/price/20", "host": ["{{baseUrl}}"], "path": ["api","games","price","20"] },
+            "description": "Returns games priced ≤ the given value" }
+        },
+        {
+          "name": "By Feature",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/games/feature/coop", "host": ["{{baseUrl}}"], "path": ["api","games","feature","coop"] },
+            "description": "Feature values: `coop`, `multiplayer`, `singleplayer`, `vr`, `controller`" }
+        }
+      ]
+    },
+
+    {
+      "name": "🔎 Search",
+      "description": "Full-text regex search across title, description, genres, tags, developer.\nBase: `{{baseUrl}}/api/v1/search`",
+      "item": [
+        {
+          "name": "GET  Search Games",
+          "request": {
+            "method": "GET", "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search?q=action&page=1&limit=20",
+              "host": ["{{baseUrl}}"], "path": ["api","v1","search"],
+              "query": [
+                { "key": "q",     "value": "action", "description": "Search keyword (required)" },
+                { "key": "page",  "value": "1",      "description": "Page number" },
+                { "key": "limit", "value": "20",     "description": "Results per page" }
+              ]
+            },
+            "description": "Full-text search. Searches across: `title`, `description`, `genres`, `tags`, `developer`, `publisher`."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔐 Auth",
+      "description": "Authentication flows.\nBase: `{{baseUrl}}/api/v1/auth`\n\nAfter login, copy `data.token` into the `token` collection variable.",
+      "item": [
+        {
+          "name": "POST Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","register"] },
             "body": {
               "mode": "raw",
               "options": { "raw": { "language": "json" } },
               "raw": "{\n  \"name\": \"Souvik Biswas\",\n  \"email\": \"souvik@example.com\",\n  \"password\": \"secret123\"\n}"
             },
-            "description": "Requires valid email and password ≥ 6 characters. Returns JWT token in data.token."
+            "description": "Create a new user account.\n\n**Validation rules:**\n- `email` — must be a valid email address\n- `password` — minimum 6 characters, maximum 128 characters\n\nReturns `data.token` on success."
           }
         },
         {
-          "name": "Login",
+          "name": "POST Login",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "login"]
-            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","login"] },
             "body": {
               "mode": "raw",
               "options": { "raw": { "language": "json" } },
               "raw": "{\n  \"email\": \"souvik@example.com\",\n  \"password\": \"secret123\"\n}"
             },
-            "description": "Returns data.token. Copy into the `token` collection variable."
+            "description": "Authenticate and receive a JWT.\n\nCopy `data.token` from the response and paste it into the **`token`** collection variable."
           }
         },
         {
-          "name": "Get Profile",
+          "name": "GET  Profile  🔐",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "profile"]
-            }
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/profile", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","profile"] },
+            "description": "Returns the authenticated user's profile. Requires valid JWT."
           }
         },
         {
-          "name": "Update Profile",
+          "name": "PATCH Update Profile  🔐",
           "request": {
             "method": "PATCH",
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "profile"]
-            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/profile", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","profile"] },
             "body": {
               "mode": "raw",
               "options": { "raw": { "language": "json" } },
-              "raw": "{\n  \"name\": \"Souvik Updated\"\n}"
+              "raw": "{\n  \"name\": \"Souvik Biswas Updated\"\n}"
             }
           }
         },
         {
-          "name": "Forgot Password",
+          "name": "POST Forgot Password",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": { "raw": "{{baseUrl}}/api/v1/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","forgot-password"] },
-            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"souvik@example.com\"\n}" }
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"souvik@example.com\"\n}"
+            },
+            "description": "Returns a reset token in `data.resetToken` (in production this would be emailed)."
           }
         },
         {
-          "name": "Reset Password",
+          "name": "POST Reset Password",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": { "raw": "{{baseUrl}}/api/v1/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","reset-password"] },
-            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"token\": \"<reset-token-from-forgot-password>\",\n  \"newPassword\": \"newsecret456\"\n}" }
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"token\": \"<paste resetToken from forgot-password response>\",\n  \"newPassword\": \"newSecret456\"\n}"
+            }
           }
         },
         {
-          "name": "Change Password",
+          "name": "POST Change Password  🔐",
           "request": {
             "method": "POST",
             "header": [
@@ -443,21 +473,78 @@
               { "key": "Content-Type",  "value": "application/json" }
             ],
             "url": { "raw": "{{baseUrl}}/api/v1/auth/change-password", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","change-password"] },
-            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"oldPassword\": \"secret123\",\n  \"newPassword\": \"newsecret456\"\n}" }
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"oldPassword\": \"secret123\",\n  \"newPassword\": \"newSecret456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/send-otp", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","send-otp"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"souvik@example.com\"\n}"
+            },
+            "description": "Sends a one-time password. Returns `data.otpCode` in development mode."
+          }
+        },
+        {
+          "name": "POST Verify Email (OTP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/verify-email", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","verify-email"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"otpCode\": \"<paste otpCode from send-otp response>\"\n}"
+            }
           }
         }
       ]
     },
+
     {
       "name": "🔑 JWT",
-      "description": "JWT token management — /api/v1/jwt  (all require Authorization: Bearer {{token}})",
+      "description": "JWT token management endpoints.\nBase: `{{baseUrl}}/api/v1/jwt`\n\n> ⚠️ All routes require `Authorization: Bearer {{token}}`",
       "item": [
-        { "name": "Profile",           "request": { "method": "GET",    "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/jwt/profile",          "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","profile"] } } },
-        { "name": "Dashboard",         "request": { "method": "GET",    "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/jwt/dashboard",         "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","dashboard"] } } },
-        { "name": "Private Games",     "request": { "method": "GET",    "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/jwt/private-games",    "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","private-games"] } } },
-        { "name": "Private Analytics", "request": { "method": "GET",    "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/jwt/private-analytics", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","private-analytics"] } } },
         {
-          "name": "Verify Token",
+          "name": "GET  Profile  🔐",
+          "request": { "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/jwt/profile", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","profile"] },
+            "description": "Returns user data decoded directly from the JWT." }
+        },
+        {
+          "name": "GET  Dashboard  🔐",
+          "request": { "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/jwt/dashboard", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","dashboard"] },
+            "description": "Returns a summary dashboard with user info and server timestamp." }
+        },
+        {
+          "name": "GET  Private Games  🔐",
+          "request": { "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/jwt/private-games?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","private-games"],
+              "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] },
+            "description": "Auth-gated mirror of GET /api/games. Supports all the same query params." }
+        },
+        {
+          "name": "GET  Private Analytics  🔐",
+          "request": { "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/jwt/private-analytics", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","private-analytics"] },
+            "description": "Auth-gated analytics: total/free/paid counts, avg rating, top genres, most-downloaded." }
+        },
+        {
+          "name": "POST Verify Token  🔐",
           "request": {
             "method": "POST",
             "header": [
@@ -465,11 +552,11 @@
               { "key": "Content-Type",  "value": "application/json" }
             ],
             "url": { "raw": "{{baseUrl}}/api/v1/jwt/verify-token", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","verify-token"] },
-            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"token\": \"{{token}}\"\n}" }
-          }
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"token\": \"{{token}}\"\n}" },
+            "description": "Verifies a JWT string and returns the decoded payload." }
         },
         {
-          "name": "Refresh Token",
+          "name": "POST Refresh Token  🔐",
           "request": {
             "method": "POST",
             "header": [
@@ -477,107 +564,367 @@
               { "key": "Content-Type",  "value": "application/json" }
             ],
             "url": { "raw": "{{baseUrl}}/api/v1/jwt/refresh-token", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","refresh-token"] },
-            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"token\": \"{{token}}\"\n}" }
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"token\": \"{{token}}\",\n  \"expiresIn\": \"7d\"\n}" },
+            "description": "Issues a new token with a fresh expiry. Pass optional `expiresIn`." }
+        },
+        {
+          "name": "POST Generate Token  🔐 (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/jwt/generate-token", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","generate-token"] },
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"payload\": { \"userId\": \"abc123\", \"role\": \"user\" },\n  \"expiresIn\": \"24h\"\n}" },
+            "description": "Admin-only. Generates a custom JWT for any payload." }
+        },
+        {
+          "name": "DELETE Revoke Token  🔐",
+          "request": { "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/jwt/revoke-token", "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","revoke-token"] },
+            "description": "Adds the current Bearer token to an in-memory blacklist. Subsequent requests with this token will be rejected." }
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Protected (JWT Write)",
+      "description": "Auth-protected game write operations.\nBase: `{{baseUrl}}/api/v1/protected`\n\n> Requires `Authorization: Bearer {{token}}`\n> Any logged-in user can access these (role: user or admin).",
+      "item": [
+        {
+          "name": "POST Create Game  🔐",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/protected/games", "host": ["{{baseUrl}}"], "path": ["api","v1","protected","games"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"appid\": 9999002,\n  \"title\": \"Auth-Protected Game\",\n  \"developer\": \"Secure Studio\",\n  \"publisher\": \"Secure Publisher\",\n  \"genres\": [\"Action\"],\n  \"rating\": 7.0,\n  \"price\": { \"original\": 9.99, \"isFree\": false }\n}"
+            }
           }
         },
-        { "name": "Revoke Token",      "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/jwt/revoke-token",    "host": ["{{baseUrl}}"], "path": ["api","v1","jwt","revoke-token"] } } }
-      ]
-    },
-    {
-      "name": "📈 Analytics",
-      "description": "Aggregation analytics — /api/v1/analytics",
-      "item": [
-        { "name": "Top Rated",             "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/top-rated",             "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","top-rated"] } } },
-        { "name": "Most Downloaded",       "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/most-downloaded",       "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","most-downloaded"] } } },
-        { "name": "Revenue",               "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/revenue",               "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","revenue"] } } },
-        { "name": "Platform Distribution", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/platform-distribution", "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","platform-distribution"] } } },
-        { "name": "Genre Distribution",    "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/genre-distribution",    "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","genre-distribution"] } } },
-        { "name": "Trending",              "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/trending",              "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","trending"] } } },
-        { "name": "Release Trends",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/release-trends",        "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","release-trends"] } } },
-        { "name": "Review Analysis",       "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/review-analysis",       "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","review-analysis"] } } },
-        { "name": "Wishlist Analysis",     "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/wishlist-analysis",     "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","wishlist-analysis"] } } },
-        { "name": "User Activity",         "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/analytics/user-activity",         "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","user-activity"] } } }
-      ]
-    },
-    {
-      "name": "📉 Stats",
-      "description": "Statistical aggregations — /api/v1/stats",
-      "item": [
-        { "name": "Count",            "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/count",              "host": ["{{baseUrl}}"], "path": ["api","v1","stats","count"] } } },
-        { "name": "Top Rated",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/top-rated",          "host": ["{{baseUrl}}"], "path": ["api","v1","stats","top-rated"] } } },
-        { "name": "Most Downloaded",  "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/most-downloaded",    "host": ["{{baseUrl}}"], "path": ["api","v1","stats","most-downloaded"] } } },
-        { "name": "Average Price",    "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/average-price",      "host": ["{{baseUrl}}"], "path": ["api","v1","stats","average-price"] } } },
-        { "name": "Average Rating",   "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/average-rating",     "host": ["{{baseUrl}}"], "path": ["api","v1","stats","average-rating"] } } },
-        { "name": "Genre Count",      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/genre-count",        "host": ["{{baseUrl}}"], "path": ["api","v1","stats","genre-count"] } } },
-        { "name": "Platform Count",   "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/platform-count",     "host": ["{{baseUrl}}"], "path": ["api","v1","stats","platform-count"] } } },
-        { "name": "F2P Count",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/free-to-play-count", "host": ["{{baseUrl}}"], "path": ["api","v1","stats","free-to-play-count"] } } },
-        { "name": "Multiplayer Count","request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/multiplayer-count",  "host": ["{{baseUrl}}"], "path": ["api","v1","stats","multiplayer-count"] } } },
-        { "name": "Monthly Releases", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/stats/monthly-releases",   "host": ["{{baseUrl}}"], "path": ["api","v1","stats","monthly-releases"] } } }
-      ]
-    },
-    {
-      "name": "🚀 Advanced",
-      "description": "Advanced game endpoints — /api/v1",
-      "item": [
-        { "name": "Random Game",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/games/random",                               "host": ["{{baseUrl}}"], "path": ["api","v1","games","random"] } } },
-        { "name": "Trending Games",     "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/trending/games",                             "host": ["{{baseUrl}}"], "path": ["api","v1","trending","games"] } } },
-        { "name": "Compare Games",      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/compare/games/{{appid}}/3822840",            "host": ["{{baseUrl}}"], "path": ["api","v1","compare","games","{{appid}}","3822840"] } } },
-        { "name": "Recommendations",   "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/recommendations/games/{{appid}}",            "host": ["{{baseUrl}}"], "path": ["api","v1","recommendations","games","{{appid}}"] } } },
-        { "name": "Timeline",           "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/timeline/game/{{appid}}",                   "host": ["{{baseUrl}}"], "path": ["api","v1","timeline","game","{{appid}}"] } } },
-        { "name": "Activity Logs",      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/activity/logs",                             "host": ["{{baseUrl}}"], "path": ["api","v1","activity","logs"] } } },
-        { "name": "Latest News",        "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/news/latest",                               "host": ["{{baseUrl}}"], "path": ["api","v1","news","latest"] } } },
-        { "name": "Trending News",      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/news/trending",                             "host": ["{{baseUrl}}"], "path": ["api","v1","news","trending"] } } }
-      ]
-    },
-    {
-      "name": "🛡️ Admin",
-      "description": "Admin-only routes — /api/v1/admin (JWT + admin role required)",
-      "item": [
-        { "name": "Admin Games",     "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/admin/games",     "host": ["{{baseUrl}}"], "path": ["api","v1","admin","games"] } } },
-        { "name": "Admin Analytics", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/admin/analytics", "host": ["{{baseUrl}}"], "path": ["api","v1","admin","analytics"] } } },
-        { "name": "Admin Reports",   "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/v1/admin/reports",   "host": ["{{baseUrl}}"], "path": ["api","v1","admin","reports"] } } }
-      ]
-    },
-    {
-      "name": "🔔 Notifications",
-      "description": "In-memory notification system — /api/v1/notifications",
-      "item": [
-        { "name": "List Notifications", "request": { "method": "GET",    "url": { "raw": "{{baseUrl}}/api/v1/notifications",          "host": ["{{baseUrl}}"], "path": ["api","v1","notifications"] } } },
         {
-          "name": "Mark as Read",
+          "name": "PATCH Update Game  🔐",
           "request": {
             "method": "PATCH",
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/notifications/read/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api","v1","notifications","read",":id"],
-              "variable": [{ "key": "id", "value": "1" }]
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/protected/games/{{appid}}", "host": ["{{baseUrl}}"], "path": ["api","v1","protected","games","{{appid}}"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"rating\": 8.8,\n  \"downloads\": 100000\n}"
             }
           }
         },
         {
-          "name": "Delete Notification",
+          "name": "DELETE Delete Game  🔐",
           "request": {
             "method": "DELETE",
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/notifications/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api","v1","notifications",":id"],
-              "variable": [{ "key": "id", "value": "1" }]
-            }
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/protected/games/{{appid}}", "host": ["{{baseUrl}}"], "path": ["api","v1","protected","games","{{appid}}"] }
           }
         }
       ]
     },
+
+    {
+      "name": "📈 Analytics",
+      "description": "Aggregation-heavy analytics endpoints.\nBase: `{{baseUrl}}/api/v1/analytics`",
+      "item": [
+        { "name": "Top Rated",             "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/top-rated",             "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","top-rated"]             }, "description": "Top 10 games by rating." } },
+        { "name": "Most Downloaded",       "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/most-downloaded",       "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","most-downloaded"]       }, "description": "Top 10 games by download count." } },
+        { "name": "Revenue by Developer",  "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/revenue",               "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","revenue"]               }, "description": "Estimated revenue per developer (price × downloads)." } },
+        { "name": "Platform Distribution", "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/platform-distribution", "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","platform-distribution"] }, "description": "Game counts per platform (windows, mac, linux)." } },
+        { "name": "Genre Distribution",    "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/genre-distribution",    "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","genre-distribution"]    }, "description": "Game counts per genre." } },
+        { "name": "Trending",              "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/trending",              "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","trending"]              }, "description": "Games released in the last 6 months, sorted by popularity." } },
+        { "name": "Release Trends",        "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/release-trends",        "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","release-trends"]        }, "description": "Game count per release year." } },
+        { "name": "Review Analysis",       "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/review-analysis",       "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","review-analysis"]       }, "description": "Average review score per game." } },
+        { "name": "Wishlist Analysis",     "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/wishlist-analysis",     "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","wishlist-analysis"]     }, "description": "Top 10 by download count (proxy for wishlists)." } },
+        { "name": "User Activity",         "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/analytics/user-activity",         "host": ["{{baseUrl}}"], "path": ["api","v1","analytics","user-activity"]         }, "description": "Per-developer: game count + average rating." } }
+      ]
+    },
+
+    {
+      "name": "📉 Stats",
+      "description": "Lightweight statistical aggregations.\nBase: `{{baseUrl}}/api/v1/stats`",
+      "item": [
+        { "name": "Total Game Count",      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/count",              "host": ["{{baseUrl}}"], "path": ["api","v1","stats","count"]              }, "description": "Total count of non-deleted games." } },
+        { "name": "Top Rated",             "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/top-rated",          "host": ["{{baseUrl}}"], "path": ["api","v1","stats","top-rated"]          } } },
+        { "name": "Most Downloaded",       "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/most-downloaded",    "host": ["{{baseUrl}}"], "path": ["api","v1","stats","most-downloaded"]    } } },
+        { "name": "Average Price",         "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/average-price",      "host": ["{{baseUrl}}"], "path": ["api","v1","stats","average-price"]      }, "description": "Average, minimum, and maximum of price.original." } },
+        { "name": "Average Rating",        "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/average-rating",     "host": ["{{baseUrl}}"], "path": ["api","v1","stats","average-rating"]     } } },
+        { "name": "Genre Count",           "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/genre-count",        "host": ["{{baseUrl}}"], "path": ["api","v1","stats","genre-count"]        }, "description": "Number of games per genre, sorted descending." } },
+        { "name": "Platform Count",        "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/platform-count",     "host": ["{{baseUrl}}"], "path": ["api","v1","stats","platform-count"]     }, "description": "Number of games per platform." } },
+        { "name": "Free-to-Play Count",    "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/free-to-play-count", "host": ["{{baseUrl}}"], "path": ["api","v1","stats","free-to-play-count"] } } },
+        { "name": "Multiplayer Count",     "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/multiplayer-count",  "host": ["{{baseUrl}}"], "path": ["api","v1","stats","multiplayer-count"]  } } },
+        { "name": "Monthly Releases",      "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/v1/stats/monthly-releases",   "host": ["{{baseUrl}}"], "path": ["api","v1","stats","monthly-releases"]   }, "description": "Game release count grouped by year and month." } }
+      ]
+    },
+
+    {
+      "name": "🚀 Advanced",
+      "description": "Advanced game discovery and comparison endpoints.\nBase: `{{baseUrl}}/api/v1`",
+      "item": [
+        {
+          "name": "GET  Random Game",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/games/random", "host": ["{{baseUrl}}"], "path": ["api","v1","games","random"] },
+            "description": "Returns one randomly selected active game via MongoDB `$sample` aggregation." }
+        },
+        {
+          "name": "GET  Trending Games",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/trending/games", "host": ["{{baseUrl}}"], "path": ["api","v1","trending","games"] },
+            "description": "Top 10 games by downloads released in the last 90 days." }
+        },
+        {
+          "name": "GET  Compare Two Games",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/compare/games/{{appid}}/3822840", "host": ["{{baseUrl}}"], "path": ["api","v1","compare","games","{{appid}}","3822840"] },
+            "description": "Side-by-side comparison of two games. Returns `{ game1: {...}, game2: {...} }`." }
+        },
+        {
+          "name": "GET  Recommendations",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/recommendations/games/{{appid}}", "host": ["{{baseUrl}}"], "path": ["api","v1","recommendations","games","{{appid}}"] },
+            "description": "Top 5 games that share genres with the given game, sorted by rating." }
+        },
+        {
+          "name": "GET  Timeline",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/timeline/game/{{appid}}", "host": ["{{baseUrl}}"], "path": ["api","v1","timeline","game","{{appid}}"] },
+            "description": "Game's updateHistory array in reverse-chronological order." }
+        },
+        {
+          "name": "GET  Activity Logs",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/activity/logs", "host": ["{{baseUrl}}"], "path": ["api","v1","activity","logs"] },
+            "description": "Last 20 request log entries from the in-memory ring buffer (method, url, statusCode, duration, timestamp)." }
+        },
+        {
+          "name": "GET  Latest News",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/news/latest", "host": ["{{baseUrl}}"], "path": ["api","v1","news","latest"] },
+            "description": "5 mock latest gaming news items." }
+        },
+        {
+          "name": "GET  Trending News",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/news/trending", "host": ["{{baseUrl}}"], "path": ["api","v1","news","trending"] },
+            "description": "5 mock trending gaming news items." }
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin",
+      "description": "Admin-only endpoints.\nBase: `{{baseUrl}}/api/v1/admin`\n\n> Requires `Authorization: Bearer {{token}}` **AND** user must have `role: admin`",
+      "item": [
+        {
+          "name": "GET  All Games (incl. archived)  🔐",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/games?page=1&limit=50",
+              "host": ["{{baseUrl}}"], "path": ["api","v1","admin","games"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "50" },
+                { "key": "sort",  "value": "createdAt", "disabled": true }
+              ]
+            },
+            "description": "Returns ALL game documents including soft-deleted (isDeleted: true). Supports ?sort=rating|downloads|price|title|releaseDate|createdAt"
+          }
+        },
+        {
+          "name": "GET  Admin Analytics  🔐",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/analytics", "host": ["{{baseUrl}}"], "path": ["api","v1","admin","analytics"] },
+            "description": "Single `$facet` aggregation returning totalGames, activeGames, archivedGames, avgRating, avgPrice, platformDist, genreDist."
+          }
+        },
+        {
+          "name": "GET  Admin Reports  🔐",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/reports", "host": ["{{baseUrl}}"], "path": ["api","v1","admin","reports"] },
+            "description": "Summary report: { totalUsers, totalGames, activeGames, archivedGames, recentActivity }"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔔 Notifications",
+      "description": "In-memory notification system. Resets on server restart.\nBase: `{{baseUrl}}/api/v1/notifications`\n\nPre-seeded with 5 notifications on startup.",
+      "item": [
+        {
+          "name": "GET  List Notifications",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications", "host": ["{{baseUrl}}"], "path": ["api","v1","notifications"] },
+            "description": "Returns all notifications newest-first with total count and unread count." }
+        },
+        {
+          "name": "PATCH Mark as Read",
+          "request": { "method": "PATCH", "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/read/1",
+              "host": ["{{baseUrl}}"], "path": ["api","v1","notifications","read","1"]
+            },
+            "description": "Sets `read: true` on the notification with the given id (integer). Replace `1` with the actual id." }
+        },
+        {
+          "name": "DELETE Remove Notification",
+          "request": { "method": "DELETE", "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/1",
+              "host": ["{{baseUrl}}"], "path": ["api","v1","notifications","1"]
+            },
+            "description": "Permanently removes the notification from memory. Replace `1` with actual id." }
+        }
+      ]
+    },
+
     {
       "name": "⚙️ System",
-      "description": "Health and system info — /api/v1",
+      "description": "System health and runtime information.\nBase: `{{baseUrl}}/api/v1`",
       "item": [
-        { "name": "Health Check",   "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/health",         "host": ["{{baseUrl}}"], "path": ["api","v1","health"] } } },
-        { "name": "System Info",    "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/system/info",    "host": ["{{baseUrl}}"], "path": ["api","v1","system","info"] } } },
-        { "name": "System Version", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/system/version", "host": ["{{baseUrl}}"], "path": ["api","v1","system","version"] } } },
-        { "name": "Root Health",    "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/",                      "host": ["{{baseUrl}}"], "path": [""] } } }
+        {
+          "name": "GET  Health Check",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/health", "host": ["{{baseUrl}}"], "path": ["api","v1","health"] },
+            "description": "Returns `{ status: 'ok', uptime: 'Xs', timestamp: ISO }`. Use for liveness probes." }
+        },
+        {
+          "name": "GET  System Info",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/system/info", "host": ["{{baseUrl}}"], "path": ["api","v1","system","info"] },
+            "description": "Returns Node.js version, environment, platform, memory usage, and MongoDB connection status." }
+        },
+        {
+          "name": "GET  System Version",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/system/version", "host": ["{{baseUrl}}"], "path": ["api","v1","system","version"] },
+            "description": "Returns `name`, `version`, `description` from package.json." }
+        },
+        {
+          "name": "GET  Root Health",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] },
+            "description": "Root endpoint — quick liveness check outside the versioned API." }
+        }
+      ]
+    },
+
+    {
+      "name": "🧪 Middleware Demo",
+      "description": "Demo endpoints that exercise each middleware layer.\nBase: `{{baseUrl}}/api/v1/middleware`\n\nUseful for testing rate limiting and error handling without affecting real data.",
+      "item": [
+        {
+          "name": "GET  Logger Demo",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/logger", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","logger"] },
+            "description": "Triggers `requestLogger`. Check the server console for the log line:\n`[GET] /api/v1/middleware/logger - <timestamp> - Xms`" }
+        },
+        {
+          "name": "GET  Auth Limiter Demo",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/auth", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","auth"] },
+            "description": "Tests the auth rate limiter (10 requests / 15 min per IP). After 10 hits you'll receive a 429." }
+        },
+        {
+          "name": "GET  General Rate-Limit Demo",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/rate-limit", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","rate-limit"] },
+            "description": "Tests the general rate limiter (100 requests / 15 min per IP)." }
+        },
+        {
+          "name": "GET  Error Handler — Validation",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/error-handler?type=validation", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","error-handler"], "query": [{ "key": "type", "value": "validation" }] },
+            "description": "Simulates a Mongoose ValidationError → 400 response." }
+        },
+        {
+          "name": "GET  Error Handler — CastError",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/error-handler?type=cast", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","error-handler"], "query": [{ "key": "type", "value": "cast" }] },
+            "description": "Simulates a Mongoose CastError → 400 response." }
+        },
+        {
+          "name": "GET  Error Handler — Duplicate Key",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/error-handler?type=duplicate", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","error-handler"], "query": [{ "key": "type", "value": "duplicate" }] },
+            "description": "Simulates a MongoDB E11000 duplicate key error → 409 response." }
+        },
+        {
+          "name": "GET  Error Handler — Custom (418)",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/error-handler?type=custom", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","error-handler"], "query": [{ "key": "type", "value": "custom" }] },
+            "description": "Returns HTTP 418 I'm a Teapot via AppError." }
+        },
+        {
+          "name": "GET  Error Handler — Default 500",
+          "request": { "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/middleware/error-handler", "host": ["{{baseUrl}}"], "path": ["api","v1","middleware","error-handler"] },
+            "description": "No `?type=` param → falls through to the default 500 path." }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 Legacy Users",
+      "description": "Pre-v1 user endpoints (kept for backwards compatibility).\nBase: `{{baseUrl}}/api/users`",
+      "item": [
+        {
+          "name": "POST Register (legacy)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"name\": \"Legacy User\",\n  \"email\": \"legacy@example.com\",\n  \"password\": \"legacypass\"\n}"
+            },
+            "description": "Legacy registration endpoint. Prefer `/api/v1/auth/register` for new integrations."
+          }
+        },
+        {
+          "name": "POST Login (legacy)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/login", "host": ["{{baseUrl}}"], "path": ["api","users","login"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"legacy@example.com\",\n  \"password\": \"legacypass\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET  Profile (legacy)  🔐",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/profile", "host": ["{{baseUrl}}"], "path": ["api","users","profile"] }
+          }
+        }
       ]
     }
+
   ]
 }

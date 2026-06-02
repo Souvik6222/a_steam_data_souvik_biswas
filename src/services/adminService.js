@@ -172,7 +172,7 @@ export const getAnalyticsSummary = async () => {
         // ── Genre distribution (active only) ────────────────────────────────
         genreDist: [
           { $match: { isDeleted: false } },
-          { $unwind: { path: '$genres', preserveNullAndEmpty: false } },
+          { $unwind: { path: '$genres', preserveNullAndEmptyArrays: false } },
           {
             $group: {
               _id:   '$genres',

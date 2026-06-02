@@ -66,16 +66,11 @@ const userSchema = new mongoose.Schema(
 
 // ─── Pre-save Hook ────────────────────────────────────────────────────────────
 // Hash the password only when it has been modified (or is new)
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // ─── Instance Methods ──────────────────────────────────────────────────────────

@@ -1,10 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
-import dotenv  from 'dotenv';
 import cors    from 'cors';
 import connectDB from './src/config/db.js';
 
-// ── Load env first so connectDB can read MONGO_URI ───────────────
-dotenv.config();
 
 // ── Database ──────────────────────────────────────────────────────
 connectDB();

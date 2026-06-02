@@ -161,7 +161,7 @@ export const averageRating = async () => {
 export const genreCount = () =>
   Game.aggregate([
     { $match: ACTIVE },
-    { $unwind: { path: '$genres', preserveNullAndEmpty: false } },
+    { $unwind: { path: '$genres', preserveNullAndEmptyArrays: false } },
     {
       $group: {
         _id:   '$genres',

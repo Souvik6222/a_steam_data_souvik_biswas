@@ -72,6 +72,16 @@ export const getGameByAppid = async (appid) => {
  * @param {object} data
  */
 export const createGame = async (data) => {
+  // Normalize price from number to PriceSchema object if needed
+  if (typeof data.price === 'number') {
+    data.price = {
+      original: data.price,
+      discounted: data.price,
+      discount_percent: 0,
+      isFree: data.price === 0,
+    };
+  }
+
   // Validate appid format before hitting the DB
   const rawId = Number(data.appid);
   if (!Number.isInteger(rawId) || rawId < 1) {
@@ -92,6 +102,14 @@ export const createGame = async (data) => {
  * @param {object} data
  */
 export const replaceGame = async (appid, data) => {
+  if (typeof data.price === 'number') {
+    data.price = {
+      original: data.price,
+      discounted: data.price,
+      discount_percent: 0,
+      isFree: data.price === 0,
+    };
+  }
   const game = await Game.findOneAndReplace(
     { appid: Number(appid) },
     { appid: Number(appid), ...data },
@@ -107,6 +125,14 @@ export const replaceGame = async (appid, data) => {
  * @param {object} data
  */
 export const updateGame = async (appid, data) => {
+  if (typeof data.price === 'number') {
+    data.price = {
+      original: data.price,
+      discounted: data.price,
+      discount_percent: 0,
+      isFree: data.price === 0,
+    };
+  }
   const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $set: data },

@@ -140,7 +140,7 @@ export const platformDistribution = () =>
 export const genreDistribution = () =>
   Game.aggregate([
     { $match: ACTIVE },
-    { $unwind: { path: '$genres', preserveNullAndEmpty: false } },
+    { $unwind: { path: '$genres', preserveNullAndEmptyArrays: false } },
     {
       $group: {
         _id:       '$genres',
