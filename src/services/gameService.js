@@ -359,4 +359,211 @@ export const getSortedByPopularityDesc = async (query = {}) => {
   };
 };
 
+// ── Sub-resource service functions ────────────────────────────────────────────
 
+/**
+ * GET /api/games/:appid/screenshots
+ * Return the screenshots array of a game.
+ * @param {number|string} appid
+ */
+export const getScreenshots = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { screenshots: 1, _id: 0 }
+  ).lean();
+  return game ? game.screenshots : null;
+};
+
+/**
+ * GET /api/games/:appid/trailers
+ * Return the trailers array of a game.
+ * @param {number|string} appid
+ */
+export const getTrailers = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { trailers: 1, _id: 0 }
+  ).lean();
+  return game ? game.trailers : null;
+};
+
+/**
+ * GET /api/games/:appid/reviews
+ * Return the reviews array of a game.
+ * @param {number|string} appid
+ */
+export const getReviews = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { reviews: 1, _id: 0 }
+  ).lean();
+  return game ? game.reviews : null;
+};
+
+/**
+ * POST /api/games/:appid/reviews
+ * Push a new review object onto game.reviews and save.
+ * @param {number|string} appid
+ * @param {{ user: string, comment: string, score: number }} reviewData
+ */
+export const addReview = async (appid, reviewData) => {
+  return Game.findOneAndUpdate(
+    { appid: Number(appid) },
+    { $push: { reviews: reviewData } },
+    { new: true, runValidators: true }
+  );
+};
+
+/**
+ * PATCH /api/games/:appid/reviews/:reviewId
+ * Find the review subdocument by _id and update its fields.
+ * @param {number|string} appid
+ * @param {string} reviewId
+ * @param {{ user?: string, comment?: string, score?: number }} data
+ */
+export const updateReview = async (appid, reviewId, data) => {
+  // Build a $set that only touches the matched array element
+  const setFields = {};
+  if (data.user    !== undefined) setFields['reviews.$.user']    = data.user;
+  if (data.comment !== undefined) setFields['reviews.$.comment'] = data.comment;
+  if (data.score   !== undefined) setFields['reviews.$.score']   = data.score;
+
+  return Game.findOneAndUpdate(
+    { appid: Number(appid), 'reviews._id': reviewId },
+    { $set: setFields },
+    { new: true, runValidators: true }
+  );
+};
+
+/**
+ * DELETE /api/games/:appid/reviews/:reviewId
+ * Pull the review with the given _id from the reviews array.
+ * @param {number|string} appid
+ * @param {string} reviewId
+ */
+export const deleteReview = async (appid, reviewId) => {
+  return Game.findOneAndUpdate(
+    { appid: Number(appid) },
+    { $pull: { reviews: { _id: reviewId } } },
+    { new: true }
+  );
+};
+
+/**
+ * GET /api/games/:appid/system-requirements
+ * Return the system_requirements subdocument of a game.
+ * @param {number|string} appid
+ */
+export const getSystemRequirements = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { system_requirements: 1, _id: 0 }
+  ).lean();
+  return game ? game.system_requirements : null;
+};
+
+/**
+ * GET /api/games/:appid/dlc
+ * Return the dlc array of a game.
+ * @param {number|string} appid
+ */
+export const getDLC = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { dlc: 1, _id: 0 }
+  ).lean();
+  return game ? game.dlc : null;
+};
+
+/**
+ * GET /api/games/:appid/achievements
+ * Return the achievements array of a game.
+ * @param {number|string} appid
+ */
+export const getAchievements = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { achievements: 1, _id: 0 }
+  ).lean();
+  return game ? game.achievements : null;
+};
+
+/**
+ * GET /api/games/:appid/leaderboard
+ * Return the top 10 games sorted by rating as a mock leaderboard.
+ * Each entry includes rank, appid, title, rating, and developer.
+ * @param {number|string} appid  (used only to verify the game exists)
+ */
+export const getLeaderboards = async (appid) => {
+  const game = await Game.findOne({ appid: Number(appid) }, { _id: 1 }).lean();
+  if (!game) return null;
+
+  const top10 = await Game.find(
+    { isDeleted: false },
+    { appid: 1, title: 1, rating: 1, developer: 1, downloads: 1, _id: 0 }
+  )
+    .sort({ rating: -1 })
+    .limit(10)
+    .lean();
+
+  return top10.map((g, idx) => ({ rank: idx + 1, ...g }));
+};
+
+/**
+ * GET /api/games/:appid/updates
+ * Return the updateHistory array sorted descending (newest first).
+ * @param {number|string} appid
+ */
+export const getUpdates = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { updateHistory: 1, _id: 0 }
+  ).lean();
+  if (!game) return null;
+
+  // updateHistory is an array of strings; reverse a copy for descending order
+  return [...(game.updateHistory ?? [])].reverse();
+};
+
+/**
+ * GET /api/games/:appid/news
+ * Return a mock 3-item news array derived from the game's own metadata.
+ * @param {number|string} appid
+ */
+export const getNews = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { title: 1, developer: 1, genres: 1, release_date: 1, _id: 0 }
+  ).lean();
+  if (!game) return null;
+
+  const title     = game.title     ?? 'the game';
+  const developer = game.developer ?? 'the developer';
+  const genre     = game.genres?.[0] ?? 'gaming';
+  const now       = new Date();
+  const oneWeek   = 7 * 24 * 60 * 60 * 1000;
+
+  return [
+    {
+      id:          1,
+      headline:    `${title} receives a major content update`,
+      body:        `${developer} has released an extensive content patch for ${title}, adding new ${genre} features and addressing community feedback.`,
+      publishedAt: new Date(now - oneWeek).toISOString(),
+      source:      'Steam News',
+    },
+    {
+      id:          2,
+      headline:    `${title} hits a new concurrent player milestone`,
+      body:        `${title} by ${developer} just surpassed its all-time concurrent player record, cementing its place among the top ${genre} titles on Steam.`,
+      publishedAt: new Date(now - 2 * oneWeek).toISOString(),
+      source:      'Steam Community',
+    },
+    {
+      id:          3,
+      headline:    `${developer} teases upcoming DLC for ${title}`,
+      body:        `In a recent developer blog, ${developer} hinted at upcoming downloadable content for ${title} that will expand the ${genre} experience significantly.`,
+      publishedAt: new Date(now - 3 * oneWeek).toISOString(),
+      source:      'Developer Blog',
+    },
+  ];
+};

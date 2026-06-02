@@ -7,13 +7,26 @@ import {
   replaceGame,
   updateGame,
   deleteGame,
-  // ── Per-game sub-resources
+  // ── Per-game sub-resources (existing)
   gameExists,
   getGameSummary,
   getUpdateHistory,
   archiveGame,
   restoreGame,
   getRelatedGames,
+  // ── Per-game sub-resources (new)
+  getScreenshots,
+  getTrailers,
+  getReviews,
+  addReview,
+  updateReview,
+  deleteReview,
+  getSystemRequirements,
+  getDLC,
+  getAchievements,
+  getLeaderboards,
+  getUpdates,
+  getNews,
   // ── Param-route controllers
   getGamesByGenre,
   getGamesByDeveloper,
@@ -90,12 +103,26 @@ router.get('/price/:price',              getGamesByMaxPrice);     // GET /api/ga
 router.get('/feature/:feature',          getGamesByFeature);      // GET /api/games/feature/coop
 
 // ── Per-game sub-resource routes (before /:appid to avoid conflicts) ──────────
-router.get('/:appid/exists',         gameExists);        // GET   /api/games/:appid/exists
-router.get('/:appid/summary',        getGameSummary);    // GET   /api/games/:appid/summary
-router.get('/:appid/update-history', getUpdateHistory);  // GET   /api/games/:appid/update-history
-router.get('/:appid/related',        getRelatedGames);   // GET   /api/games/:appid/related
-router.patch('/:appid/archive',      archiveGame);       // PATCH /api/games/:appid/archive
-router.patch('/:appid/restore',      restoreGame);       // PATCH /api/games/:appid/restore
+router.get('/:appid/exists',               gameExists);             // GET    /api/games/:appid/exists
+router.get('/:appid/summary',              getGameSummary);         // GET    /api/games/:appid/summary
+router.get('/:appid/update-history',       getUpdateHistory);       // GET    /api/games/:appid/update-history
+router.get('/:appid/related',              getRelatedGames);        // GET    /api/games/:appid/related
+router.patch('/:appid/archive',            archiveGame);            // PATCH  /api/games/:appid/archive
+router.patch('/:appid/restore',            restoreGame);            // PATCH  /api/games/:appid/restore
+
+// ── New sub-resource routes ───────────────────────────────────────────────────
+router.get('/:appid/screenshots',          getScreenshots);         // GET    /api/games/:appid/screenshots
+router.get('/:appid/trailers',             getTrailers);            // GET    /api/games/:appid/trailers
+router.get('/:appid/reviews',              getReviews);             // GET    /api/games/:appid/reviews
+router.post('/:appid/reviews',             addReview);              // POST   /api/games/:appid/reviews
+router.patch('/:appid/reviews/:reviewId',  updateReview);           // PATCH  /api/games/:appid/reviews/:reviewId
+router.delete('/:appid/reviews/:reviewId', deleteReview);           // DELETE /api/games/:appid/reviews/:reviewId
+router.get('/:appid/system-requirements',  getSystemRequirements);  // GET    /api/games/:appid/system-requirements
+router.get('/:appid/dlc',                  getDLC);                 // GET    /api/games/:appid/dlc
+router.get('/:appid/achievements',         getAchievements);        // GET    /api/games/:appid/achievements
+router.get('/:appid/leaderboard',          getLeaderboards);        // GET    /api/games/:appid/leaderboard
+router.get('/:appid/updates',              getUpdates);             // GET    /api/games/:appid/updates
+router.get('/:appid/news',                 getNews);                // GET    /api/games/:appid/news
 
 // ── Single-resource routes ────────────────────────────────────────────────────
 router.get('/:appid',    getGameByAppid);  // GET    /api/games/:appid
