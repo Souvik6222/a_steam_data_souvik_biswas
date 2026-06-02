@@ -13,6 +13,8 @@
  *   GET /free-to-play-count → count of isFreeToPlay games
  *   GET /multiplayer-count  → count of isMultiplayer games
  *   GET /monthly-releases   → game count per year+month
+ *
+ * HEAD + OPTIONS registered for every path above.
  */
 
 import { Router } from 'express';
@@ -28,6 +30,7 @@ import {
   getMultiplayerCount,
   getMonthlyReleases,
 } from '../controllers/statsController.js';
+import { addHeadOptions } from '../utils/httpMethods.js';
 
 const router = Router();
 
@@ -41,5 +44,17 @@ router.get('/platform-count',      getPlatformCount);    // GET /api/v1/stats/pl
 router.get('/free-to-play-count',  getFreeToPlayCount);  // GET /api/v1/stats/free-to-play-count
 router.get('/multiplayer-count',   getMultiplayerCount); // GET /api/v1/stats/multiplayer-count
 router.get('/monthly-releases',    getMonthlyReleases);  // GET /api/v1/stats/monthly-releases
+
+// ── HEAD + OPTIONS ────────────────────────────────────────────────────────────
+addHeadOptions(router, '/count',              'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/top-rated',          'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/most-downloaded',    'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/average-price',      'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/average-rating',     'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/genre-count',        'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/platform-count',     'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/free-to-play-count', 'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/multiplayer-count',  'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/monthly-releases',   'GET, HEAD, OPTIONS');
 
 export default router;

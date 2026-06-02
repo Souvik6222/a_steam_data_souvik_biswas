@@ -18,6 +18,7 @@ import {
   getLatestNews,
   getTrendingNews,
 } from '../controllers/advancedController.js';
+import { addHeadOptions } from '../utils/httpMethods.js';
 
 const router = Router();
 
@@ -43,4 +44,15 @@ router.get('/activity/logs', getActivityLogs);              // GET /api/v1/activ
 router.get('/news/latest',   getLatestNews);                // GET /api/v1/news/latest
 router.get('/news/trending', getTrendingNews);              // GET /api/v1/news/trending
 
+// ── HEAD + OPTIONS ────────────────────────────────────────────────────────────
+addHeadOptions(router, '/games/random',                  'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/recommendations/games/:appid',  'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/trending/games',                'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/compare/games/:id1/:id2',       'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/timeline/game/:appid',          'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/activity/logs',                 'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/news/latest',                   'GET, HEAD, OPTIONS');
+addHeadOptions(router, '/news/trending',                 'GET, HEAD, OPTIONS');
+
 export default router;
+

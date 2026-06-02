@@ -1,0 +1,10 @@
+# src/data — Steam dataset placeholder
+
+Place your Steam dataset JSON file here before running the seed script:
+
+```
+src/data/games.json
+```
+
+This directory is tracked in git (via `.gitkeep`) but `games.json` itself
+is excluded via `.gitignore` because it can be very large (50 MB+).
