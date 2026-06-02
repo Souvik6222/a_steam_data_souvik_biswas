@@ -46,7 +46,7 @@ const errorHandler = (err, req, res, next) => {
   };
 
   // Expose stack trace only in development
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'development') {
     payload.error = err.stack;
   }
 
