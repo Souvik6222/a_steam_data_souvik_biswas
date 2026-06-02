@@ -1,6 +1,7 @@
 import Game from '../models/Game.js';
 import buildFilter from '../utils/buildFilter.js';
 import paginate from '../utils/paginate.js';
+import AppError from '../utils/AppError.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -61,7 +62,9 @@ export const getAllGames = async (query = {}) => {
  * Fetch a single game by its Steam appid.
  */
 export const getGameByAppid = async (appid) => {
-  return findByAppid(appid);
+  const game = await findByAppid(appid);
+  if (!game) throw new AppError('Game not found.', 404);
+  return game;
 };
 
 /**
@@ -69,6 +72,16 @@ export const getGameByAppid = async (appid) => {
  * @param {object} data
  */
 export const createGame = async (data) => {
+  // Validate appid format before hitting the DB
+  const rawId = Number(data.appid);
+  if (!Number.isInteger(rawId) || rawId < 1) {
+    throw new AppError('appid must be a positive integer.', 400);
+  }
+
+  // Check for duplicate before Mongoose throws an opaque 11000 error
+  const exists = await Game.countDocuments({ appid: rawId });
+  if (exists > 0) throw new AppError(`A game with appid ${rawId} already exists.`, 409);
+
   return Game.create(data);
 };
 
@@ -79,11 +92,13 @@ export const createGame = async (data) => {
  * @param {object} data
  */
 export const replaceGame = async (appid, data) => {
-  return Game.findOneAndReplace(
+  const game = await Game.findOneAndReplace(
     { appid: Number(appid) },
     { appid: Number(appid), ...data },
     { new: true, runValidators: true }
   );
+  if (!game) throw new AppError('Game not found.', 404);
+  return game;
 };
 
 /**
@@ -92,11 +107,13 @@ export const replaceGame = async (appid, data) => {
  * @param {object} data
  */
 export const updateGame = async (appid, data) => {
-  return Game.findOneAndUpdate(
+  const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $set: data },
     { new: true, runValidators: true }
   );
+  if (!game) throw new AppError('Game not found.', 404);
+  return game;
 };
 
 /**
@@ -104,7 +121,9 @@ export const updateGame = async (appid, data) => {
  * @param {number|string} appid
  */
 export const deleteGame = async (appid) => {
-  return Game.findOneAndDelete({ appid: Number(appid) });
+  const game = await Game.findOneAndDelete({ appid: Number(appid) });
+  if (!game) throw new AppError('Game not found.', 404);
+  return game;
 };
 
 /**
@@ -145,11 +164,13 @@ export const getUpdateHistory = async (appid) => {
  * @param {number|string} appid
  */
 export const archiveGame = async (appid) => {
-  return Game.findOneAndUpdate(
+  const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $set: { isDeleted: true } },
     { new: true }
   );
+  if (!game) throw new AppError('Game not found.', 404);
+  return game;
 };
 
 /**
@@ -157,11 +178,13 @@ export const archiveGame = async (appid) => {
  * @param {number|string} appid
  */
 export const restoreGame = async (appid) => {
-  return Game.findOneAndUpdate(
+  const game = await Game.findOneAndUpdate(
     { appid: Number(appid), isDeleted: true },
     { $set: { isDeleted: false } },
     { new: true }
   );
+  if (!game) throw new AppError('Game not found or not archived.', 404);
+  return game;
 };
 
 /**
@@ -371,7 +394,8 @@ export const getScreenshots = async (appid) => {
     { appid: Number(appid) },
     { screenshots: 1, _id: 0 }
   ).lean();
-  return game ? game.screenshots : null;
+  if (!game) throw new AppError('Game not found.', 404);
+  return game.screenshots;
 };
 
 /**
@@ -384,7 +408,8 @@ export const getTrailers = async (appid) => {
     { appid: Number(appid) },
     { trailers: 1, _id: 0 }
   ).lean();
-  return game ? game.trailers : null;
+  if (!game) throw new AppError('Game not found.', 404);
+  return game.trailers;
 };
 
 /**
@@ -397,7 +422,8 @@ export const getReviews = async (appid) => {
     { appid: Number(appid) },
     { reviews: 1, _id: 0 }
   ).lean();
-  return game ? game.reviews : null;
+  if (!game) throw new AppError('Game not found.', 404);
+  return game.reviews;
 };
 
 /**
@@ -407,11 +433,13 @@ export const getReviews = async (appid) => {
  * @param {{ user: string, comment: string, score: number }} reviewData
  */
 export const addReview = async (appid, reviewData) => {
-  return Game.findOneAndUpdate(
+  const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $push: { reviews: reviewData } },
     { new: true, runValidators: true }
   );
+  if (!game) throw new AppError('Game not found.', 404);
+  return game;
 };
 
 /**
@@ -428,11 +456,13 @@ export const updateReview = async (appid, reviewId, data) => {
   if (data.comment !== undefined) setFields['reviews.$.comment'] = data.comment;
   if (data.score   !== undefined) setFields['reviews.$.score']   = data.score;
 
-  return Game.findOneAndUpdate(
+  const game = await Game.findOneAndUpdate(
     { appid: Number(appid), 'reviews._id': reviewId },
     { $set: setFields },
     { new: true, runValidators: true }
   );
+  if (!game) throw new AppError('Game or review not found.', 404);
+  return game;
 };
 
 /**
@@ -442,11 +472,13 @@ export const updateReview = async (appid, reviewId, data) => {
  * @param {string} reviewId
  */
 export const deleteReview = async (appid, reviewId) => {
-  return Game.findOneAndUpdate(
+  const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $pull: { reviews: { _id: reviewId } } },
     { new: true }
   );
+  if (!game) throw new AppError('Game not found.', 404);
+  return game;
 };
 
 /**
@@ -459,7 +491,8 @@ export const getSystemRequirements = async (appid) => {
     { appid: Number(appid) },
     { system_requirements: 1, _id: 0 }
   ).lean();
-  return game ? game.system_requirements : null;
+  if (!game) throw new AppError('Game not found.', 404);
+  return game.system_requirements;
 };
 
 /**
@@ -472,7 +505,8 @@ export const getDLC = async (appid) => {
     { appid: Number(appid) },
     { dlc: 1, _id: 0 }
   ).lean();
-  return game ? game.dlc : null;
+  if (!game) throw new AppError('Game not found.', 404);
+  return game.dlc;
 };
 
 /**
@@ -485,7 +519,8 @@ export const getAchievements = async (appid) => {
     { appid: Number(appid) },
     { achievements: 1, _id: 0 }
   ).lean();
-  return game ? game.achievements : null;
+  if (!game) throw new AppError('Game not found.', 404);
+  return game.achievements;
 };
 
 /**
@@ -496,7 +531,7 @@ export const getAchievements = async (appid) => {
  */
 export const getLeaderboards = async (appid) => {
   const game = await Game.findOne({ appid: Number(appid) }, { _id: 1 }).lean();
-  if (!game) return null;
+  if (!game) throw new AppError('Game not found.', 404);
 
   const top10 = await Game.find(
     { isDeleted: false },
@@ -519,7 +554,7 @@ export const getUpdates = async (appid) => {
     { appid: Number(appid) },
     { updateHistory: 1, _id: 0 }
   ).lean();
-  if (!game) return null;
+  if (!game) throw new AppError('Game not found.', 404);
 
   // updateHistory is an array of strings; reverse a copy for descending order
   return [...(game.updateHistory ?? [])].reverse();
@@ -535,7 +570,7 @@ export const getNews = async (appid) => {
     { appid: Number(appid) },
     { title: 1, developer: 1, genres: 1, release_date: 1, _id: 0 }
   ).lean();
-  if (!game) return null;
+  if (!game) throw new AppError('Game not found.', 404);
 
   const title     = game.title     ?? 'the game';
   const developer = game.developer ?? 'the developer';
@@ -566,4 +601,91 @@ export const getNews = async (appid) => {
       source:      'Developer Blog',
     },
   ];
+};
+
+// ── Advanced service functions ────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/games/random
+ * Return one random active game using $sample aggregation.
+ * @returns {Promise<object|null>}
+ */
+export const getRandomGame = async () => {
+  const result = await Game.aggregate([
+    { $match: { isDeleted: false } },
+    { $sample: { size: 1 } },
+  ]);
+  return result.length > 0 ? result[0] : null;
+};
+
+/**
+ * GET /api/v1/compare/games/:id1/:id2
+ * Fetch two games by appid and return them side-by-side.
+ * @param {number|string} id1
+ * @param {number|string} id2
+ * @returns {Promise<{ game1: object|null, game2: object|null }>}
+ */
+export const compareGames = async (id1, id2) => {
+  const [game1, game2] = await Promise.all([
+    Game.findOne({ appid: Number(id1) }).lean(),
+    Game.findOne({ appid: Number(id2) }).lean(),
+  ]);
+  return { game1, game2 };
+};
+
+/**
+ * GET /api/v1/timeline/game/:appid
+ * Return the updateHistory of a game sorted chronologically (newest first).
+ * @param {number|string} appid
+ * @returns {Promise<string[]|null>}
+ */
+export const getTimeline = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { updateHistory: 1, title: 1, appid: 1, _id: 0 }
+  ).lean();
+  if (!game) return null;
+
+  // updateHistory is an array of strings; reverse a copy for newest-first order
+  const timeline = [...(game.updateHistory ?? [])].reverse();
+  return { appid: game.appid, title: game.title, timeline };
+};
+
+/**
+ * GET /api/v1/recommendations/games/:appid
+ * Find top 5 games that share the most genres with the given game.
+ * @param {number|string} appid
+ * @returns {Promise<object[]|null>}
+ */
+export const getRecommendations = async (appid) => {
+  const game = await Game.findOne(
+    { appid: Number(appid) },
+    { genres: 1, _id: 0 }
+  ).lean();
+  if (!game || !game.genres?.length) return null;
+
+  return Game.find({
+    appid: { $ne: Number(appid) },
+    genres: { $in: game.genres },
+    isDeleted: false,
+  })
+    .sort({ rating: -1 })
+    .limit(5)
+    .lean();
+};
+
+/**
+ * GET /api/v1/trending/games
+ * Return top 10 games by downloads released in the last 90 days.
+ * @returns {Promise<object[]>}
+ */
+export const getTrendingGames = async () => {
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  return Game.find({
+    isDeleted: false,
+    release_date: { $gte: ninetyDaysAgo },
+  })
+    .sort({ downloads: -1 })
+    .limit(10)
+    .lean();
 };

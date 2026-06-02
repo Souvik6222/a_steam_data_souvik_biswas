@@ -3,9 +3,10 @@
  * ─────────────────────────────────────────────────────────────────
  * Global 4-argument error-handling middleware.
  *
- * Handled error types:
- *   • ValidationError   → 400  (Mongoose / express-validator)
- *   • CastError         → 400  (invalid ObjectId, wrong type)
+ * Handled error types (checked in priority order):
+ *   • AppError          → uses err.statusCode  (operational errors)
+ *   • ValidationError   → 400  (Mongoose schema validation failures)
+ *   • CastError         → 400  (invalid ObjectId / wrong field type)
  *   • Duplicate key     → 409  (MongoDB code 11000)
  *   • Default           → 500
  *
@@ -13,28 +14,39 @@
  *   { success: false, message: string, error?: string (dev only) }
  */
 
+import AppError from '../utils/AppError.js';
+
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
   let message    = err.message   || 'Internal Server Error';
 
-  // ── Mongoose ValidationError (schema validation failures) ────────
-  if (err.name === 'ValidationError') {
+  // ── 1. AppError (known operational errors) ───────────────────────
+  // Already has statusCode set — just use it directly. We still
+  // fall through to check for Mongoose-specific overrides below
+  // only if it isn't an AppError, so the instanceof check short-
+  // circuits any mismatches with the generic status logic.
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message    = err.message;
+  }
+
+  // ── 2. Mongoose ValidationError (schema validation failures) ─────
+  else if (err.name === 'ValidationError') {
     statusCode = 400;
-    // Concatenate all field-level messages into one readable string
     message = Object.values(err.errors)
       .map((e) => e.message)
       .join(', ');
   }
 
-  // ── Mongoose CastError (e.g. invalid ObjectId) ───────────────────
-  if (err.name === 'CastError') {
+  // ── 3. Mongoose CastError (e.g. invalid ObjectId) ─────────────────
+  else if (err.name === 'CastError') {
     statusCode = 400;
     message = `Invalid value for field "${err.path}": ${err.value}`;
   }
 
-  // ── MongoDB duplicate-key error ──────────────────────────────────
-  if (err.code === 11000) {
+  // ── 4. MongoDB duplicate-key error ────────────────────────────────
+  else if (err.code === 11000) {
     statusCode = 409;
     const field = Object.keys(err.keyValue || {}).join(', ');
     message = `Duplicate value for field: ${field}`;

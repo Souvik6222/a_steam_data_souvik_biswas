@@ -13,7 +13,10 @@ import middlewareRoutes  from './src/routes/middlewareRoutes.js';
 import analyticsRoutes   from './src/routes/analyticsRoutes.js';
 import statsRoutes       from './src/routes/statsRoutes.js';
 import adminRoutes       from './src/routes/adminRoutes.js';
-import protectedRoutes   from './src/routes/protectedRoutes.js';
+import protectedRoutes     from './src/routes/protectedRoutes.js';
+import advancedRoutes      from './src/routes/advancedRoutes.js';
+import notificationRoutes  from './src/routes/notificationRoutes.js';
+import systemRoutes        from './src/routes/systemRoutes.js';
 
 // ── Middlewares ──────────────────────────────────────────────────
 import requestLogger     from './src/middlewares/requestLogger.js';
@@ -55,6 +58,9 @@ app.use('/api/v1/analytics',         analyticsRoutes);
 app.use('/api/v1/stats',             statsRoutes);
 app.use('/api/v1/admin',             adminRoutes);       // JWT + role:admin required
 app.use('/api/v1/protected',         protectedRoutes);   // JWT required
+app.use('/api/v1',                   advancedRoutes);    // Advanced game routes
+app.use('/api/v1/notifications',     notificationRoutes);// In-memory notifications
+app.use('/api/v1',                   systemRoutes);      // Health, system info, version
 
 // ── 4. 404 fallback ──────────────────────────────────────────────
 app.use(notFound);

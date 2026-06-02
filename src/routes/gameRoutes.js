@@ -60,12 +60,13 @@ import {
   getSortedByReleaseDateDesc,
   getSortedByPopularityDesc,
 } from '../controllers/gameController.js';
+import { validateGame, validateGameListQuery } from '../middlewares/validate.js';
 
 const router = Router();
 
 // ── Collection routes ─────────────────────────────────────────────────────────
-router.get('/',    getAllGames);  // GET  /api/games
-router.post('/',   createGame);  // POST /api/games
+router.get('/',    validateGameListQuery, getAllGames);  // GET  /api/games
+router.post('/',   validateGame,         createGame);   // POST /api/games
 
 // ── Sort routes (static — before /filter/* and param routes) ────────────────
 router.get('/sort/price-desc',       getSortedByPriceDesc);       // GET /api/games/sort/price-desc
