@@ -10,11 +10,16 @@
  * src/middlewares/errorHandler.js.
  */
 
+// Import the complete services layer containing Mongoose operations
 import * as gameService from '../services/gameService.js';
+// Import utility function that handles async controllers and propagates errors to the Express error boundary
 import catchAsync from '../utils/catchAsync.js';
 
 // ── Response helper ───────────────────────────────────────────────────────────
 
+/**
+ * Standard utility function to unify response shapes across this controller.
+ */
 const respond = (res, statusCode, success, message, data = null) =>
   res.status(statusCode).json({ success, message, data });
 
@@ -22,27 +27,30 @@ const respond = (res, statusCode, success, message, data = null) =>
 
 /**
  * GET /api/games
- * Fetch all non-deleted games. Accepts optional query-string filters.
+ * Fetch all non-deleted games. Accepts optional query-string filters (e.g. page, limit, sort).
  */
 export const getAllGames = catchAsync(async (req, res) => {
+  // Delegate DB lookup query and paging parameters (req.query) to gameService
   const result = await gameService.getAllGames(req.query);
   respond(res, 200, true, 'Games fetched successfully.', result);
 });
 
 /**
  * GET /api/games/:appid
- * Fetch a single game by appid.
+ * Fetch a single game by its unique AppID.
  */
 export const getGameByAppid = catchAsync(async (req, res) => {
+  // Pass the route parameter :appid to the lookup service
   const game = await gameService.getGameByAppid(req.params.appid);
   respond(res, 200, true, 'Game fetched successfully.', game);
 });
 
 /**
  * POST /api/games
- * Create a new game.
+ * Create and insert a new game document.
  */
 export const createGame = catchAsync(async (req, res) => {
+  // Pass the creation body payload (req.body) to the creation service
   const game = await gameService.createGame(req.body);
   respond(res, 201, true, 'Game created successfully.', game);
 });
@@ -52,13 +60,14 @@ export const createGame = catchAsync(async (req, res) => {
  * Full replacement of a game document.
  */
 export const replaceGame = catchAsync(async (req, res) => {
+  // Replace the entire document with the new body data
   const game = await gameService.replaceGame(req.params.appid, req.body);
   respond(res, 200, true, 'Game replaced successfully.', game);
 });
 
 /**
  * PATCH /api/games/:appid
- * Partial update of a game document.
+ * Partial update of a game document (updates only fields sent in req.body).
  */
 export const updateGame = catchAsync(async (req, res) => {
   const game = await gameService.updateGame(req.params.appid, req.body);
@@ -67,7 +76,7 @@ export const updateGame = catchAsync(async (req, res) => {
 
 /**
  * DELETE /api/games/:appid
- * Hard-delete a game permanently.
+ * Hard-delete a game permanently from the database.
  */
 export const deleteGame = catchAsync(async (req, res) => {
   const game = await gameService.deleteGame(req.params.appid);
@@ -76,7 +85,7 @@ export const deleteGame = catchAsync(async (req, res) => {
 
 /**
  * GET /api/games/:appid/exists
- * Check if a game exists by appid.
+ * Lightweight check to see if a game already exists by AppID.
  */
 export const gameExists = catchAsync(async (req, res) => {
   const exists = await gameService.gameExists(req.params.appid);
@@ -85,7 +94,7 @@ export const gameExists = catchAsync(async (req, res) => {
 
 /**
  * GET /api/games/:appid/summary
- * Return lightweight summary: title, rating, price, genres, platforms.
+ * Return lightweight summary of specific game fields to conserve bandwidth.
  */
 export const getGameSummary = catchAsync(async (req, res) => {
   const summary = await gameService.getGameSummary(req.params.appid);
@@ -97,7 +106,7 @@ export const getGameSummary = catchAsync(async (req, res) => {
 
 /**
  * GET /api/games/:appid/update-history
- * Return the updateHistory array of a game.
+ * Return the updateHistory change-log array of a game.
  */
 export const getUpdateHistory = catchAsync(async (req, res) => {
   const history = await gameService.getUpdateHistory(req.params.appid);
@@ -107,7 +116,7 @@ export const getUpdateHistory = catchAsync(async (req, res) => {
 
 /**
  * PATCH /api/games/:appid/archive
- * Soft-delete a game (isDeleted: true).
+ * Soft-delete a game (flags isDeleted: true instead of removing the record).
  */
 export const archiveGame = catchAsync(async (req, res) => {
   const game = await gameService.archiveGame(req.params.appid);
@@ -116,7 +125,7 @@ export const archiveGame = catchAsync(async (req, res) => {
 
 /**
  * PATCH /api/games/:appid/restore
- * Restore a soft-deleted game (isDeleted: false).
+ * Restore a soft-deleted game back to active state (flags isDeleted: false).
  */
 export const restoreGame = catchAsync(async (req, res) => {
   const game = await gameService.restoreGame(req.params.appid);
@@ -125,7 +134,7 @@ export const restoreGame = catchAsync(async (req, res) => {
 
 /**
  * GET /api/games/:appid/related
- * Return games with matching genres, excluding self.
+ * Return games with matching genres, excluding self, to act as recommendations.
  */
 export const getRelatedGames = catchAsync(async (req, res) => {
   const related = await gameService.getRelatedGames(req.params.appid);
@@ -134,13 +143,22 @@ export const getRelatedGames = catchAsync(async (req, res) => {
 
 // ── Param-route controllers ───────────────────────────────────────────────────
 
+/**
+ * Higher-order controller factory to dynamically process routes containing dynamic parameters.
+ * Extracts the first key value inside req.params and delegates it to the service function.
+ * Avoids writing redundant boilerplate for /genre/:genre, /developer/:developer, etc.
+ */
 const handleParamRoute = (serviceFn, label) =>
   catchAsync(async (req, res) => {
-    const paramValue = Object.values(req.params)[0]; // first param (genre/developer/etc.)
+    // Retrieve the actual parameter value (e.g. "Action" from req.params.genre or "Valve" from req.params.developer)
+    const paramValue = Object.values(req.params)[0]; 
+    // Execute the service passing the parameter value and query modifiers
     const result = await serviceFn(paramValue, req.query);
+    // Respond back to client
     respond(res, 200, true, `${label} fetched successfully.`, result);
   });
 
+// Bind service methods to param controllers
 export const getGamesByGenre       = handleParamRoute(gameService.getGamesByGenre,       'Games by genre');
 export const getGamesByDeveloper   = handleParamRoute(gameService.getGamesByDeveloper,   'Games by developer');
 export const getGamesByPublisher   = handleParamRoute(gameService.getGamesByPublisher,   'Games by publisher');
@@ -153,12 +171,17 @@ export const getGamesByFeature     = handleParamRoute(gameService.getGamesByFeat
 
 // ── Boolean filter-route controllers ─────────────────────────────────────────
 
+/**
+ * Higher-order controller factory that processes pre-filtered requests.
+ * Passes the req.query object directly into the service layer function.
+ */
 const handleFilterRoute = (serviceFn, label) =>
   catchAsync(async (req, res) => {
     const result = await serviceFn(req.query);
     respond(res, 200, true, `${label} fetched successfully.`, result);
   });
 
+// Bind service methods to boolean filter routes
 export const getFreeToPlayGames   = handleFilterRoute(gameService.getFreeToPlayGames,   'Free-to-play games');
 export const getPaidGames         = handleFilterRoute(gameService.getPaidGames,          'Paid games');
 export const getDiscountedGames   = handleFilterRoute(gameService.getDiscountedGames,   'Discounted games');
@@ -177,6 +200,7 @@ export const getTopRatedGames     = handleFilterRoute(gameService.getTopRatedGam
 
 // ── Sort-route controllers ────────────────────────────────────────────────────
 
+// Bind sorting service functions to sort routes
 export const getSortedByPriceDesc       = handleFilterRoute(gameService.getSortedByPriceDesc,       'Games sorted by price');
 export const getSortedByRatingDesc      = handleFilterRoute(gameService.getSortedByRatingDesc,      'Games sorted by rating');
 export const getSortedByDownloadsDesc   = handleFilterRoute(gameService.getSortedByDownloadsDesc,   'Games sorted by downloads');
@@ -211,6 +235,7 @@ export const getReviews = catchAsync(async (req, res) => {
 
 /**
  * POST /api/games/:appid/reviews
+ * Inserts a review into the reviews sub-document array.
  */
 export const addReview = catchAsync(async (req, res) => {
   const game = await gameService.addReview(req.params.appid, req.body);
@@ -219,6 +244,7 @@ export const addReview = catchAsync(async (req, res) => {
 
 /**
  * PATCH /api/games/:appid/reviews/:reviewId
+ * Updates an embedded review based on its unique sub-document _id.
  */
 export const updateReview = catchAsync(async (req, res) => {
   const game = await gameService.updateReview(
@@ -231,6 +257,7 @@ export const updateReview = catchAsync(async (req, res) => {
 
 /**
  * DELETE /api/games/:appid/reviews/:reviewId
+ * Removes an embedded review based on its unique _id.
  */
 export const deleteReview = catchAsync(async (req, res) => {
   const game = await gameService.deleteReview(

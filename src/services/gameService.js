@@ -1,6 +1,10 @@
+// Import the Game Mongoose model for collection queries and mutations
 import Game from '../models/Game.js';
+// Import utility to build a MongoDB filter object from request parameters
 import buildFilter from '../utils/buildFilter.js';
+// Import custom helper to paginate MongoDB query results
 import paginate from '../utils/paginate.js';
+// Import operational application error class
 import AppError from '../utils/AppError.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -12,11 +16,12 @@ import AppError from '../utils/AppError.js';
  * @returns {Promise<Document>}
  */
 const findByAppid = (appid, projection = {}) =>
+  // Query MongoDB for one document matching appid, applying the optional projection field selection
   Game.findOne({ appid: Number(appid) }, projection);
 
 // ── Service functions ─────────────────────────────────────────────────────────
 
-// ── Sort-field map ────────────────────────────────────────────────────────────
+// Map URL query parameter sort names to Mongoose schema paths
 const SORT_FIELDS = {
   price:       'price.original',
   rating:      'rating',
@@ -33,12 +38,17 @@ const SORT_FIELDS = {
  * @returns {object}
  */
 const resolveSort = (sortParam) => {
+  // If no sorting is requested, default to newest records first
   if (!sortParam) return { createdAt: -1 };
 
+  // Split string by dash (e.g. "rating-desc" -> ["rating", "desc"])
   const [field, dir] = sortParam.split('-');
+  // Retrieve target Mongoose path
   const mongoField = SORT_FIELDS[field];
+  // Fall back to newest first if the field is not in our allowed map
   if (!mongoField) return { createdAt: -1 };
 
+  // Construct query object dynamically: dir === 'desc' maps to -1 (descending), otherwise 1 (ascending)
   return { [mongoField]: dir === 'desc' ? -1 : 1 };
 };
 
@@ -52,9 +62,13 @@ const resolveSort = (sortParam) => {
  *   limit — page size (default: 20, max: 100)
  */
 export const getAllGames = async (query = {}) => {
+  // Extract pagination and sorting parameters, leaving filter parameters inside filterParams via rest operator
   const { sort, page, limit, ...filterParams } = query;
+  // Convert standard key-value filter parameters into MongoDB-compatible operators using buildFilter
   const filter  = buildFilter(filterParams);
+  // Get MongoDB-compatible sorting object
   const sortDoc = resolveSort(sort);
+  // Execute paginated find query
   return paginate(Game, filter, sortDoc, page, limit);
 };
 
@@ -62,7 +76,9 @@ export const getAllGames = async (query = {}) => {
  * Fetch a single game by its Steam appid.
  */
 export const getGameByAppid = async (appid) => {
+  // Query DB using helper
   const game = await findByAppid(appid);
+  // If no record returned, throw 404 Not Found error
   if (!game) throw new AppError('Game not found.', 404);
   return game;
 };
@@ -72,7 +88,7 @@ export const getGameByAppid = async (appid) => {
  * @param {object} data
  */
 export const createGame = async (data) => {
-  // Normalize price from number to PriceSchema object if needed
+  // Normalize price: if user passed price as a raw number, map it to the PriceSchema structure
   if (typeof data.price === 'number') {
     data.price = {
       original: data.price,
@@ -82,16 +98,17 @@ export const createGame = async (data) => {
     };
   }
 
-  // Validate appid format before hitting the DB
+  // Validate that appid is present and is a positive integer before saving
   const rawId = Number(data.appid);
   if (!Number.isInteger(rawId) || rawId < 1) {
     throw new AppError('appid must be a positive integer.', 400);
   }
 
-  // Check for duplicate before Mongoose throws an opaque 11000 error
+  // Count existing documents with matching appid to prevent duplicates
   const exists = await Game.countDocuments({ appid: rawId });
   if (exists > 0) throw new AppError(`A game with appid ${rawId} already exists.`, 409);
 
+  // Write new record to MongoDB
   return Game.create(data);
 };
 
@@ -102,6 +119,7 @@ export const createGame = async (data) => {
  * @param {object} data
  */
 export const replaceGame = async (appid, data) => {
+  // Normalize price field structure if passed as plain number
   if (typeof data.price === 'number') {
     data.price = {
       original: data.price,
@@ -110,6 +128,9 @@ export const replaceGame = async (appid, data) => {
       isFree: data.price === 0,
     };
   }
+  // Mongoose findOneAndReplace replaces the matching document completely with the new fields
+  // - { new: true } returns the replaced document
+  // - { runValidators: true } runs schema verification
   const game = await Game.findOneAndReplace(
     { appid: Number(appid) },
     { appid: Number(appid), ...data },
@@ -125,6 +146,7 @@ export const replaceGame = async (appid, data) => {
  * @param {object} data
  */
 export const updateGame = async (appid, data) => {
+  // Normalize price field structure if passed as plain number
   if (typeof data.price === 'number') {
     data.price = {
       original: data.price,
@@ -133,6 +155,7 @@ export const updateGame = async (appid, data) => {
       isFree: data.price === 0,
     };
   }
+  // Mongoose findOneAndUpdate updates specified fields inside the document using MongoDB $set operator
   const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $set: data },
@@ -147,6 +170,7 @@ export const updateGame = async (appid, data) => {
  * @param {number|string} appid
  */
 export const deleteGame = async (appid) => {
+  // Mongoose findOneAndDelete locates and removes the document matching the AppID
   const game = await Game.findOneAndDelete({ appid: Number(appid) });
   if (!game) throw new AppError('Game not found.', 404);
   return game;
@@ -158,6 +182,7 @@ export const deleteGame = async (appid) => {
  * @returns {Promise<boolean>}
  */
 export const gameExists = async (appid) => {
+  // Check count of matching documents
   const count = await Game.countDocuments({ appid: Number(appid) });
   return count > 0;
 };
@@ -167,6 +192,8 @@ export const gameExists = async (appid) => {
  * @param {number|string} appid
  */
 export const getGameSummary = async (appid) => {
+  // Use select projection (e.g. title: 1) to select only required fields and exclude _id
+  // .lean() returns plain Javascript objects instead of heavy Mongoose documents, increasing performance
   return Game.findOne(
     { appid: Number(appid), isDeleted: false },
     { title: 1, rating: 1, price: 1, genres: 1, platforms: 1, _id: 0 }
@@ -190,6 +217,7 @@ export const getUpdateHistory = async (appid) => {
  * @param {number|string} appid
  */
 export const archiveGame = async (appid) => {
+  // Flag the document as deleted so it is excluded from public searches but preserved in database
   const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $set: { isDeleted: true } },
@@ -204,6 +232,7 @@ export const archiveGame = async (appid) => {
  * @param {number|string} appid
  */
 export const restoreGame = async (appid) => {
+  // Locate a soft-deleted game and clear the isDeleted flag
   const game = await Game.findOneAndUpdate(
     { appid: Number(appid), isDeleted: true },
     { $set: { isDeleted: false } },
@@ -218,9 +247,14 @@ export const restoreGame = async (appid) => {
  * @param {number|string} appid
  */
 export const getRelatedGames = async (appid) => {
+  // Lookup original game genres list
   const game = await findByAppid(appid, { genres: 1 });
   if (!game || !game.genres?.length) return [];
 
+  // Query games that:
+  // - appid: { $ne: Number(appid) } (not equal to the current game ID to exclude self)
+  // - genres: { $in: game.genres } (genres match at least one in the current list)
+  // - isDeleted: false (must be an active game)
   return Game.find({
     appid: { $ne: Number(appid) },
     genres: { $in: game.genres },
@@ -234,6 +268,7 @@ export const getRelatedGames = async (appid) => {
 /** GET /genre/:genre */
 export const getGamesByGenre = (genre, query = {}) => {
   const { sort, page, limit } = query;
+  // Use $in operator to match the requested genre
   const filter = { isDeleted: false, genres: { $in: [genre] } };
   return paginate(Game, filter, resolveSort(sort), page, limit);
 };
@@ -257,6 +292,7 @@ export const getGamesByPlatform = (platform, query = {}) => {
   const { sort, page, limit } = query;
   const validPlatforms = ['windows', 'mac', 'linux'];
   const p = platform.trim().toLowerCase();
+  // If dynamic key exists in list, set filter path matching nested property (e.g. platforms.windows: true)
   const filter = validPlatforms.includes(p)
     ? { isDeleted: false, [`platforms.${p}`]: true }
     : { isDeleted: false };
@@ -274,6 +310,7 @@ export const getGamesByTag = (tag, query = {}) => {
 export const getGamesByReleaseYear = (year, query = {}) => {
   const { sort, page, limit } = query;
   const y = parseInt(year, 10);
+  // Search release dates falling between Jan 1st of year and Jan 1st of year + 1 using $gte and $lt
   const filter = {
     isDeleted: false,
     release_date: {
@@ -287,6 +324,7 @@ export const getGamesByReleaseYear = (year, query = {}) => {
 /** GET /rating/:rating  — games with rating >= value */
 export const getGamesByMinRating = (rating, query = {}) => {
   const { sort, page, limit } = query;
+  // Use $gte (Greater Than or Equal) to filter ratings
   const filter = { isDeleted: false, rating: { $gte: Number(rating) } };
   return paginate(Game, filter, resolveSort(sort), page, limit);
 };
@@ -294,6 +332,7 @@ export const getGamesByMinRating = (rating, query = {}) => {
 /** GET /price/:price  — games with price.original <= value */
 export const getGamesByMaxPrice = (price, query = {}) => {
   const { sort, page, limit } = query;
+  // Use $lte (Less Than or Equal) to filter original pricing
   const filter = { isDeleted: false, 'price.original': { $lte: Number(price) } };
   return paginate(Game, filter, resolveSort(sort), page, limit);
 };
@@ -319,6 +358,7 @@ const FEATURE_FIELD_MAP = {
 
 export const getGamesByFeature = (feature, query = {}) => {
   const { sort, page, limit } = query;
+  // Lookup standard database boolean key mapping from slug
   const field = FEATURE_FIELD_MAP[feature.toLowerCase()];
   const filter = field
     ? { isDeleted: false, [field]: true }
@@ -328,6 +368,7 @@ export const getGamesByFeature = (feature, query = {}) => {
 
 // ── Boolean filter-route services ─────────────────────────────────────────────
 
+// Helper function to unify boolean checks and pagination calls
 const filterQuery = (extraFilter, query = {}) => {
   const { sort, page, limit } = query;
   const filter = { isDeleted: false, ...extraFilter };
@@ -336,6 +377,7 @@ const filterQuery = (extraFilter, query = {}) => {
 
 export const getFreeToPlayGames    = (q) => filterQuery({ isFreeToPlay: true },  q);
 export const getPaidGames          = (q) => filterQuery({ isFreeToPlay: false }, q);
+// Matches discount percent greater than ($gt) 0
 export const getDiscountedGames    = (q) => filterQuery({ 'price.discount_percent': { $gt: 0 } }, q);
 export const getEarlyAccessGames   = (q) => filterQuery({ isEarlyAccess: true },        q);
 export const getVROnlyGames        = (q) => filterQuery({ isVROnly: true },             q);
@@ -348,7 +390,8 @@ export const getSurvivalGames      = (q) => filterQuery({ isSurvival: true },   
 export const getHorrorGames        = (q) => filterQuery({ isHorror: true },             q);
 export const getAnimeGames         = (q) => filterQuery({ isAnime: true },              q);
 export const getIndieGames         = (q) => filterQuery({ isIndie: true },              q);
-export const getTopRatedGames      = (q) => filterQuery({}, { ...q, sort: 'rating-desc' });
+// Enforces sorting by rating-desc
+export const getTopRatedGames     = (q) => filterQuery({}, { ...q, sort: 'rating-desc' });
 
 // ── Sort-route services ───────────────────────────────────────────────────────
 
@@ -380,23 +423,32 @@ export const getSortedByReleaseDateDesc = (query = {}) => {
 
 /**
  * GET /sort/popularity-desc
- * Composite score: downloads + (rating * 100).
+ * Composite score calculation: downloads + (rating * 100).
  * Uses aggregation so no schema change is required.
  */
 export const getSortedByPopularityDesc = async (query = {}) => {
+  // Sanitize page and limit parameters
   const safePage  = Math.max(1, parseInt(query.page,  10) || 1);
   const safeLimit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 20));
+  // Calculate skip offset
   const skip      = (safePage - 1) * safeLimit;
 
+  // Run database count and aggregation pipeline concurrently to reduce lookup times using Promise.all()
   const [countResult, data] = await Promise.all([
     Game.countDocuments(BASE_FILTER),
     Game.aggregate([
+      // Stage 1: Filter out soft deleted records
       { $match: BASE_FILTER },
+      // Stage 2: Calculate composite popularityScore using mathematical operators $add and $multiply
       { $addFields: { popularityScore: { $add: ['$downloads', { $multiply: ['$rating', 100] }] } } },
+      // Stage 3: Sort by popularityScore descending
       { $sort: { popularityScore: -1 } },
+      // Stage 4: Paginate by skipping offset records
       { $skip: skip },
+      // Stage 5: Limit to safeLimit page size
       { $limit: safeLimit },
-      { $project: { popularityScore: 0 } }, // strip the ephemeral field from output
+      // Stage 6: Project results to strip out the ephemeral field from the final documents
+      { $project: { popularityScore: 0 } }, 
     ]),
   ]);
 
@@ -416,6 +468,7 @@ export const getSortedByPopularityDesc = async (query = {}) => {
  * @param {number|string} appid
  */
 export const getScreenshots = async (appid) => {
+  // Query only the screenshots key and exclude internal _id
   const game = await Game.findOne(
     { appid: Number(appid) },
     { screenshots: 1, _id: 0 }
@@ -459,6 +512,7 @@ export const getReviews = async (appid) => {
  * @param {{ user: string, comment: string, score: number }} reviewData
  */
 export const addReview = async (appid, reviewData) => {
+  // Locate the game and push the new review object onto the reviews array using MongoDB $push operator
   const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $push: { reviews: reviewData } },
@@ -476,12 +530,13 @@ export const addReview = async (appid, reviewData) => {
  * @param {{ user?: string, comment?: string, score?: number }} data
  */
 export const updateReview = async (appid, reviewId, data) => {
-  // Build a $set that only touches the matched array element
+  // Build a dynamic $set object targeting the matched array element via positional operator ($)
   const setFields = {};
   if (data.user    !== undefined) setFields['reviews.$.user']    = data.user;
   if (data.comment !== undefined) setFields['reviews.$.comment'] = data.comment;
   if (data.score   !== undefined) setFields['reviews.$.score']   = data.score;
 
+  // Locate the game containing the specific review _id, and apply the updates to the reviews positional index ($)
   const game = await Game.findOneAndUpdate(
     { appid: Number(appid), 'reviews._id': reviewId },
     { $set: setFields },
@@ -498,6 +553,7 @@ export const updateReview = async (appid, reviewId, data) => {
  * @param {string} reviewId
  */
 export const deleteReview = async (appid, reviewId) => {
+  // Use MongoDB $pull operator to extract/remove review objects that match the specified reviewId _id
   const game = await Game.findOneAndUpdate(
     { appid: Number(appid) },
     { $pull: { reviews: { _id: reviewId } } },
@@ -556,9 +612,11 @@ export const getAchievements = async (appid) => {
  * @param {number|string} appid  (used only to verify the game exists)
  */
 export const getLeaderboards = async (appid) => {
+  // Check if target game exists
   const game = await Game.findOne({ appid: Number(appid) }, { _id: 1 }).lean();
   if (!game) throw new AppError('Game not found.', 404);
 
+  // Query top 10 games sorted by rating descending
   const top10 = await Game.find(
     { isDeleted: false },
     { appid: 1, title: 1, rating: 1, developer: 1, downloads: 1, _id: 0 }
@@ -567,6 +625,7 @@ export const getLeaderboards = async (appid) => {
     .limit(10)
     .lean();
 
+  // Map elements to inject rank indices (1 to 10)
   return top10.map((g, idx) => ({ rank: idx + 1, ...g }));
 };
 
@@ -582,7 +641,7 @@ export const getUpdates = async (appid) => {
   ).lean();
   if (!game) throw new AppError('Game not found.', 404);
 
-  // updateHistory is an array of strings; reverse a copy for descending order
+  // Copy elements using spread operator and reverse the array copy to preserve newest updates first
   return [...(game.updateHistory ?? [])].reverse();
 };
 
@@ -592,18 +651,21 @@ export const getUpdates = async (appid) => {
  * @param {number|string} appid
  */
 export const getNews = async (appid) => {
+  // Extract parameters
   const game = await Game.findOne(
     { appid: Number(appid) },
     { title: 1, developer: 1, genres: 1, release_date: 1, _id: 0 }
   ).lean();
   if (!game) throw new AppError('Game not found.', 404);
 
+  // Fallback defaults
   const title     = game.title     ?? 'the game';
   const developer = game.developer ?? 'the developer';
   const genre     = game.genres?.[0] ?? 'gaming';
   const now       = new Date();
   const oneWeek   = 7 * 24 * 60 * 60 * 1000;
 
+  // Build a list of realistic news articles using mock text strings
   return [
     {
       id:          1,
@@ -637,6 +699,7 @@ export const getNews = async (appid) => {
  * @returns {Promise<object|null>}
  */
 export const getRandomGame = async () => {
+  // Use MongoDB $sample operator which randomly selects documents from the collection
   const result = await Game.aggregate([
     { $match: { isDeleted: false } },
     { $sample: { size: 1 } },
@@ -652,6 +715,7 @@ export const getRandomGame = async () => {
  * @returns {Promise<{ game1: object|null, game2: object|null }>}
  */
 export const compareGames = async (id1, id2) => {
+  // Fetch both records concurrently using Promise.all
   const [game1, game2] = await Promise.all([
     Game.findOne({ appid: Number(id1) }).lean(),
     Game.findOne({ appid: Number(id2) }).lean(),
@@ -672,7 +736,7 @@ export const getTimeline = async (appid) => {
   ).lean();
   if (!game) return null;
 
-  // updateHistory is an array of strings; reverse a copy for newest-first order
+  // Reverse copy
   const timeline = [...(game.updateHistory ?? [])].reverse();
   return { appid: game.appid, title: game.title, timeline };
 };
@@ -684,12 +748,14 @@ export const getTimeline = async (appid) => {
  * @returns {Promise<object[]|null>}
  */
 export const getRecommendations = async (appid) => {
+  // Query original genres
   const game = await Game.findOne(
     { appid: Number(appid) },
     { genres: 1, _id: 0 }
   ).lean();
   if (!game || !game.genres?.length) return null;
 
+  // Query top 5 highest-rated active games matching at least one genre
   return Game.find({
     appid: { $ne: Number(appid) },
     genres: { $in: game.genres },
@@ -706,6 +772,7 @@ export const getRecommendations = async (appid) => {
  * @returns {Promise<object[]>}
  */
 export const getTrendingGames = async () => {
+  // Calculate date offset (90 days = 90 days * 24 hours * 60 min * 60 sec * 1000 ms)
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   return Game.find({
     isDeleted: false,

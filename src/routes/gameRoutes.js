@@ -7,7 +7,9 @@
  * browsers, and CORS preflight requests are answered correctly.
  */
 
+// Import Express Router
 import { Router } from 'express';
+// Import game controller endpoints
 import {
   // ── CRUD
   getAllGames,
@@ -69,26 +71,35 @@ import {
   getSortedByReleaseDateDesc,
   getSortedByPopularityDesc,
 } from '../controllers/gameController.js';
+// Import query and body validation middleware sets
 import { validateGame, validateGameListQuery } from '../middlewares/validate.js';
+// Import utility helper to register CORS preflight routes
 import { addHeadOptions } from '../utils/httpMethods.js';
 
+// Initialize the Express router instance
 const router = Router();
 
 // ── HEAD + OPTIONS: collection ────────────────────────────────────────────────
+// Registers preflight responses for the root collection path
 addHeadOptions(router, '/',       'GET, POST, HEAD, OPTIONS');
 
 // ── Collection routes ─────────────────────────────────────────────────────────
-router.get('/',    validateGameListQuery, getAllGames);  // GET  /api/games
-router.post('/',   validateGame,         createGame);   // POST /api/games
+// GET /api/games: runs validation checks, then fetches the page of game records
+router.get('/',    validateGameListQuery, getAllGames);  
+// POST /api/games: runs field validation checks, then inserts the game record
+router.post('/',   validateGame,         createGame);   
 
-// ── Sort routes (static — before /filter/* and param routes) ────────────────
+// ── Sort routes (static segments) ─────────────────────────────────────────────
+// IMPORTANT ROUTING RULE:
+// Static paths (like /sort/* and /filter/*) must be declared BEFORE routes containing parameters (like /:appid)
+// otherwise Express will interpret the word "sort" as an :appid parameter value (e.g. req.params.appid = "sort").
 router.get('/sort/price-desc',       getSortedByPriceDesc);       // GET /api/games/sort/price-desc
 router.get('/sort/rating-desc',      getSortedByRatingDesc);      // GET /api/games/sort/rating-desc
 router.get('/sort/downloads-desc',   getSortedByDownloadsDesc);   // GET /api/games/sort/downloads-desc
 router.get('/sort/releaseDate-desc', getSortedByReleaseDateDesc); // GET /api/games/sort/releaseDate-desc
 router.get('/sort/popularity-desc',  getSortedByPopularityDesc);  // GET /api/games/sort/popularity-desc
 
-// HEAD + OPTIONS: sort collection (all sort endpoints share same methods)
+// HEAD + OPTIONS for sort collection endpoints
 addHeadOptions(router, '/sort/price-desc',       'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/sort/rating-desc',      'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/sort/downloads-desc',   'GET, HEAD, OPTIONS');
@@ -112,7 +123,7 @@ router.get('/filter/anime',               getAnimeGames);         // GET /api/ga
 router.get('/filter/indie',               getIndieGames);         // GET /api/games/filter/indie
 router.get('/filter/top-rated',           getTopRatedGames);     // GET /api/games/filter/top-rated
 
-// HEAD + OPTIONS: filter collection endpoints
+// HEAD + OPTIONS for filter collection endpoints
 addHeadOptions(router, '/filter/free-to-play',       'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/filter/paid',               'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/filter/discounted',         'GET, HEAD, OPTIONS');
@@ -130,17 +141,18 @@ addHeadOptions(router, '/filter/indie',              'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/filter/top-rated',          'GET, HEAD, OPTIONS');
 
 // ── Param routes ──────────────────────────────────────────────────────────────
-router.get('/genre/:genre',              getGamesByGenre);        // GET /api/games/genre/Action
-router.get('/developer/:developer',      getGamesByDeveloper);    // GET /api/games/developer/Valve
-router.get('/publisher/:publisher',      getGamesByPublisher);    // GET /api/games/publisher/EA
-router.get('/platform/:platform',        getGamesByPlatform);     // GET /api/games/platform/linux
-router.get('/tag/:tag',                  getGamesByTag);           // GET /api/games/tag/roguelike
-router.get('/release-year/:year',        getGamesByReleaseYear);  // GET /api/games/release-year/2023
-router.get('/rating/:rating',            getGamesByMinRating);    // GET /api/games/rating/8
-router.get('/price/:price',              getGamesByMaxPrice);     // GET /api/games/price/20
-router.get('/feature/:feature',          getGamesByFeature);      // GET /api/games/feature/coop
+// Registers endpoints matching dynamic parameter paths (e.g. /genre/RPG, /developer/Valve)
+router.get('/genre/:genre',              getGamesByGenre);        
+router.get('/developer/:developer',      getGamesByDeveloper);    
+router.get('/publisher/:publisher',      getGamesByPublisher);    
+router.get('/platform/:platform',        getGamesByPlatform);     
+router.get('/tag/:tag',                  getGamesByTag);           
+router.get('/release-year/:year',        getGamesByReleaseYear);  
+router.get('/rating/:rating',            getGamesByMinRating);    
+router.get('/price/:price',              getGamesByMaxPrice);     
+router.get('/feature/:feature',          getGamesByFeature);      
 
-// HEAD + OPTIONS: param routes (wildcard param paths)
+// HEAD + OPTIONS for parameterized query routes
 addHeadOptions(router, '/genre/:genre',         'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/developer/:developer', 'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/publisher/:publisher', 'GET, HEAD, OPTIONS');
@@ -152,26 +164,27 @@ addHeadOptions(router, '/price/:price',         'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/feature/:feature',     'GET, HEAD, OPTIONS');
 
 // ── Per-game sub-resource routes (before /:appid to avoid conflicts) ──────────
-router.get('/:appid/exists',               gameExists);             // GET    /api/games/:appid/exists
-router.get('/:appid/summary',              getGameSummary);         // GET    /api/games/:appid/summary
-router.get('/:appid/update-history',       getUpdateHistory);       // GET    /api/games/:appid/update-history
-router.get('/:appid/related',              getRelatedGames);        // GET    /api/games/:appid/related
-router.patch('/:appid/archive',            archiveGame);            // PATCH  /api/games/:appid/archive
-router.patch('/:appid/restore',            restoreGame);            // PATCH  /api/games/:appid/restore
+// These contain explicit sub-resource paths under the appid parameter (e.g. /:appid/exists)
+router.get('/:appid/exists',               gameExists);             
+router.get('/:appid/summary',              getGameSummary);         
+router.get('/:appid/update-history',       getUpdateHistory);       
+router.get('/:appid/related',              getRelatedGames);        
+router.patch('/:appid/archive',            archiveGame);            
+router.patch('/:appid/restore',            restoreGame);            
 
 // ── New sub-resource routes ───────────────────────────────────────────────────
-router.get('/:appid/screenshots',          getScreenshots);         // GET    /api/games/:appid/screenshots
-router.get('/:appid/trailers',             getTrailers);            // GET    /api/games/:appid/trailers
-router.get('/:appid/reviews',              getReviews);             // GET    /api/games/:appid/reviews
-router.post('/:appid/reviews',             addReview);              // POST   /api/games/:appid/reviews
-router.patch('/:appid/reviews/:reviewId',  updateReview);           // PATCH  /api/games/:appid/reviews/:reviewId
-router.delete('/:appid/reviews/:reviewId', deleteReview);           // DELETE /api/games/:appid/reviews/:reviewId
-router.get('/:appid/system-requirements',  getSystemRequirements);  // GET    /api/games/:appid/system-requirements
-router.get('/:appid/dlc',                  getDLC);                 // GET    /api/games/:appid/dlc
-router.get('/:appid/achievements',         getAchievements);        // GET    /api/games/:appid/achievements
-router.get('/:appid/leaderboard',          getLeaderboards);        // GET    /api/games/:appid/leaderboard
-router.get('/:appid/updates',              getUpdates);             // GET    /api/games/:appid/updates
-router.get('/:appid/news',                 getNews);                // GET    /api/games/:appid/news
+router.get('/:appid/screenshots',          getScreenshots);         
+router.get('/:appid/trailers',             getTrailers);            
+router.get('/:appid/reviews',              getReviews);             
+router.post('/:appid/reviews',             addReview);              
+router.patch('/:appid/reviews/:reviewId',  updateReview);           
+router.delete('/:appid/reviews/:reviewId', deleteReview);           
+router.get('/:appid/system-requirements',  getSystemRequirements);  
+router.get('/:appid/dlc',                  getDLC);                 
+router.get('/:appid/achievements',         getAchievements);        
+router.get('/:appid/leaderboard',          getLeaderboards);        
+router.get('/:appid/updates',              getUpdates);             
+router.get('/:appid/news',                 getNews);                
 
 // ── HEAD + OPTIONS: per-game sub-resources ────────────────────────────────────
 addHeadOptions(router, '/:appid/exists',             'GET, HEAD, OPTIONS');
@@ -192,12 +205,15 @@ addHeadOptions(router, '/:appid/updates',            'GET, HEAD, OPTIONS');
 addHeadOptions(router, '/:appid/news',               'GET, HEAD, OPTIONS');
 
 // ── Single-resource routes ────────────────────────────────────────────────────
-router.get('/:appid',    getGameByAppid);  // GET    /api/games/:appid
-router.put('/:appid',    replaceGame);     // PUT    /api/games/:appid
-router.patch('/:appid',  updateGame);      // PATCH  /api/games/:appid
-router.delete('/:appid', deleteGame);      // DELETE /api/games/:appid
+// These match dynamic GET/PUT/PATCH/DELETE on the dynamic appid parameter (e.g. GET /api/games/730)
+// This must be placed last because it is the most general parameter route.
+router.get('/:appid',    getGameByAppid);  
+router.put('/:appid',    replaceGame);     
+router.patch('/:appid',  updateGame);      
+router.delete('/:appid', deleteGame);      
 
-// HEAD + OPTIONS: single game resource
+// HEAD + OPTIONS: single game resource preflights
 addHeadOptions(router, '/:appid', 'GET, PUT, PATCH, DELETE, HEAD, OPTIONS');
 
+// Export router instance
 export default router;

@@ -5,6 +5,7 @@
  * a friendly JSON response listing all available API endpoints.
  */
 
+// A comprehensive registry of all valid API endpoints to act as API documentation for client errors
 const availableRoutes = {
   'Health Check': {
     'GET /': 'Check if API is running',
@@ -163,6 +164,10 @@ const availableRoutes = {
   },
 };
 
+/**
+ * Middleware to handle unmatched request URLs.
+ * Returns a 404 (Not Found) JSON response detailing the exact path requested and providing a list of all available routes.
+ */
 export const notFound = (req, res, _next) => {
   res.status(404).json({
     success: false,
@@ -172,11 +177,17 @@ export const notFound = (req, res, _next) => {
   });
 };
 
+/**
+ * Alternate error handler function (legacy/demo use cases).
+ * If the current HTTP status code in response is 200, default it to 500. Otherwise, preserve it and return a JSON error payload.
+ */
 export const errorHandler = (err, req, res, next) => {
+  // If the status is 200, override to 500 (since it entered the error path)
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode);
   res.json({
     message: err.message,
+    // Do not leak stack traces in production environment to avoid security scanning risks
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 };

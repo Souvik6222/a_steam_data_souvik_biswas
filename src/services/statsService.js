@@ -17,9 +17,11 @@
  *   monthlyReleases   – game count grouped by year + month
  */
 
+// Import Mongoose model
 import Game from '../models/Game.js';
 
 // ── Shared base filter ────────────────────────────────────────────────────────
+// Query condition matching active games
 const ACTIVE = { isDeleted: false };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,10 +32,14 @@ const ACTIVE = { isDeleted: false };
  * Pipeline: $match → $count
  */
 export const count = async () => {
+  // Execute database count using aggregate pipeline
   const result = await Game.aggregate([
+    // Stage 1: Filter active games
     { $match: ACTIVE },
+    // Stage 2: Aggregate count of matched records into a property named 'count'
     { $count: 'count' },
   ]);
+  // Return the first element of results array, or fallback default values if collection is empty
   return result[0] ?? { count: 0 };
 };
 
@@ -95,16 +101,19 @@ export const mostDownloaded = () =>
  */
 export const averagePrice = async () => {
   const result = await Game.aggregate([
+    // Stage 1: Filter active games
     { $match: ACTIVE },
+    // Stage 2: Group all documents together to calculate aggregate stats
     {
       $group: {
-        _id:      null,
-        avgPrice: { $avg: '$price.original' },
-        minPrice: { $min: '$price.original' },
-        maxPrice: { $max: '$price.original' },
-        total:    { $sum: 1 },
+        _id:      null, // Single group aggregating all documents
+        avgPrice: { $avg: '$price.original' }, // Compute average original price
+        minPrice: { $min: '$price.original' }, // Find minimum original price
+        maxPrice: { $max: '$price.original' }, // Find maximum original price
+        total:    { $sum: 1 }, // Count total documents
       },
     },
+    // Stage 3: Project fields, rounding the average price to 2 decimals
     {
       $project: {
         _id:      0,
@@ -130,11 +139,11 @@ export const averageRating = async () => {
     { $match: ACTIVE },
     {
       $group: {
-        _id:       null,
-        avgRating: { $avg: '$rating' },
-        minRating: { $min: '$rating' },
-        maxRating: { $max: '$rating' },
-        total:     { $sum: 1 },
+        _id:       null, // Single group
+        avgRating: { $avg: '$rating' }, // Average rating
+        minRating: { $min: '$rating' }, // Minimum rating
+        maxRating: { $max: '$rating' }, // Maximum rating
+        total:     { $sum: 1 }, // Total documents count
       },
     },
     {
@@ -161,14 +170,18 @@ export const averageRating = async () => {
 export const genreCount = () =>
   Game.aggregate([
     { $match: ACTIVE },
+    // Stage 2: Explode the genres array so each array element gets its own document
     { $unwind: { path: '$genres', preserveNullAndEmptyArrays: false } },
+    // Stage 3: Group by genre string and sum total count
     {
       $group: {
         _id:   '$genres',
         count: { $sum: 1 },
       },
     },
+    // Stage 4: Sort descending by count
     { $sort: { count: -1 } },
+    // Stage 5: Reshape keys
     {
       $project: {
         _id:   0,
@@ -191,7 +204,8 @@ export const platformCount = async () => {
     { $match: ACTIVE },
     {
       $group: {
-        _id:     null,
+        _id:     null, // Single group
+        // If platforms.windows evaluates to true, add 1, else add 0
         windows: { $sum: { $cond: ['$platforms.windows', 1, 0] } },
         mac:     { $sum: { $cond: ['$platforms.mac',     1, 0] } },
         linux:   { $sum: { $cond: ['$platforms.linux',   1, 0] } },
@@ -243,26 +257,32 @@ export const multiplayerCount = async () => {
  */
 export const monthlyReleases = () =>
   Game.aggregate([
+    // Stage 1: Filter games with a valid release date
     { $match: { isDeleted: false, release_date: { $exists: true, $ne: null } } },
+    // Stage 2: Group games by release year and month
     {
       $group: {
         _id: {
+          // Extract calendar year
           year:  { $year:  '$release_date' },
+          // Extract calendar month (1 to 12)
           month: { $month: '$release_date' },
         },
-        count:          { $sum: 1 },
-        avgRating:      { $avg: '$rating' },
-        totalDownloads: { $sum: '$downloads' },
+        count:          { $sum: 1 }, // Total count for that month
+        avgRating:      { $avg: '$rating' }, // Average rating
+        totalDownloads: { $sum: '$downloads' }, // Total downloads
       },
     },
+    // Stage 3: Sort chronologically by year, then by month
     { $sort: { '_id.year': 1, '_id.month': 1 } },
+    // Stage 4: Reshape output fields
     {
       $project: {
         _id:            0,
         year:           '$_id.year',
         month:          '$_id.month',
         count:          1,
-        avgRating:      { $round: ['$avgRating', 2] },
+        avgRating:      { $round: ['$avgRating', 2] }, // Round average rating float
         totalDownloads: 1,
       },
     },
