@@ -1,7 +1,7 @@
 // Import the mongoose library which is an ODM (Object Data Modeling) library for MongoDB and Node.js
 import mongoose from 'mongoose';
 
-/**
+/**                                                                    
  * Asynchronous function to establish a connection to the MongoDB database.
  * This is called during server startup in server.js.
  */
