@@ -201,26 +201,28 @@ function renderHtmlHomepage(scanResult, dbState, uptimeSeconds) {
   
   <style>
     :root {
-      --bg-color: #0c1017;
-      --bg-surface: rgba(22, 28, 38, 0.7);
-      --bg-surface-hover: rgba(29, 37, 51, 0.85);
-      --border-color: rgba(255, 255, 255, 0.05);
+      --bg-color: #0b0c10;
+      --bg-surface: rgba(30, 25, 45, 0.4);
+      --bg-surface-hover: rgba(45, 40, 70, 0.6);
+      --border-color: rgba(255, 255, 255, 0.08);
       --text-main: #f0f4f9;
-      --text-muted: #8b9bb4;
-      --primary: #00ffcc;
-      --primary-glow: rgba(0, 255, 204, 0.15);
+      --text-muted: #a0aabf;
+      --primary: #9d4edd;
+      --primary-glow: rgba(157, 78, 221, 0.3);
+      --secondary: #00d2ff;
+      --secondary-glow: rgba(0, 210, 255, 0.3);
       
-      --color-get: #00e676;
-      --color-post: #2979ff;
-      --color-put: #ff9100;
-      --color-patch: #00e5ff;
-      --color-delete: #ff1744;
+      --color-get: #00ffcc;
+      --color-post: #3a86ff;
+      --color-put: #ffbe0b;
+      --color-patch: #8338ec;
+      --color-delete: #ff006e;
       
-      --bg-get: rgba(0, 230, 118, 0.08);
-      --bg-post: rgba(41, 121, 255, 0.08);
-      --bg-put: rgba(255, 145, 0, 0.08);
-      --bg-patch: rgba(0, 229, 255, 0.08);
-      --bg-delete: rgba(255, 23, 68, 0.08);
+      --bg-get: rgba(0, 255, 204, 0.1);
+      --bg-post: rgba(58, 134, 255, 0.1);
+      --bg-put: rgba(255, 190, 11, 0.1);
+      --bg-patch: rgba(131, 56, 236, 0.1);
+      --bg-delete: rgba(255, 0, 110, 0.1);
     }
     
     * {
@@ -237,8 +239,8 @@ function renderHtmlHomepage(scanResult, dbState, uptimeSeconds) {
       overflow-x: hidden;
       line-height: 1.5;
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 255, 204, 0.03) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(160, 0, 255, 0.04) 0%, transparent 45%);
+        radial-gradient(circle at 10% 20%, rgba(157, 78, 221, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(0, 210, 255, 0.15) 0%, transparent 50%);
     }
     
     header {
@@ -336,12 +338,13 @@ function renderHtmlHomepage(scanResult, dbState, uptimeSeconds) {
     /* Stats Row */
     .hero-panel {
       background: var(--bg-surface);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
+      border-radius: 20px;
       padding: 2.5rem;
       margin-bottom: 2.5rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.02);
     }
     
     .hero-header h1 {
@@ -349,9 +352,10 @@ function renderHtmlHomepage(scanResult, dbState, uptimeSeconds) {
       font-size: 2.5rem;
       font-weight: 800;
       margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--primary) 0%, #9c27b0 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(157, 78, 221, 0.3));
     }
     
     .hero-subtitle {
@@ -379,8 +383,10 @@ function renderHtmlHomepage(scanResult, dbState, uptimeSeconds) {
     }
     
     .stat-card:hover {
-      border-color: rgba(0, 255, 204, 0.2);
-      transform: translateY(-2px);
+      border-color: rgba(157, 78, 221, 0.4);
+      transform: translateY(-4px);
+      background: rgba(255, 255, 255, 0.03);
+      box-shadow: 0 8px 20px rgba(157, 78, 221, 0.15);
     }
     
     .stat-label {
@@ -400,10 +406,11 @@ function renderHtmlHomepage(scanResult, dbState, uptimeSeconds) {
     
     /* Interactive Filter Bar */
     .filter-sticky-bar {
-      background: rgba(12, 16, 23, 0.8);
-      backdrop-filter: blur(10px);
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 1rem;
       margin-bottom: 2.5rem;
       display: flex;
@@ -411,7 +418,7 @@ function renderHtmlHomepage(scanResult, dbState, uptimeSeconds) {
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
     }
     
     .search-wrapper {
