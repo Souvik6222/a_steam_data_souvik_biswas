@@ -1,9 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.PROD 
-    ? 'https://a-steam-data-utkarsh-singh-2.onrender.com' 
-    : '', // Empty in dev because we rely on Vite's proxy `/api/v1`
+  baseURL: import.meta.env.VITE_API_URL || '',
   headers: {
     'Content-Type': 'application/json',
   },
