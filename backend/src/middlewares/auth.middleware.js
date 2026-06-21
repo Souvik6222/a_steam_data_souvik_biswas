@@ -38,7 +38,7 @@ function authMiddleware(req, res, next) {
     //   - signature matches JWT_SECRET (proves server issued it, not tampered)
     //   - token is not expired (exp claim from JWT_EXPIRES_IN at sign time)
     // Throws JsonWebTokenError or TokenExpiredError if invalid.
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'steam_games_default_secret_key_2026_xyz');
 
     // Step 6 — Attach safe user info to req so controllers don't re-verify the token.
     // decoded payload was { id, role } when we called jwt.sign() in auth.service.js.

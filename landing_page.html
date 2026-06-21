@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Lumina - Designing Clarity // Brand Intelligence System</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#E85D22",
+            secondary: "#000000",
+            accent: "#C98B5A",
+            canvas: "#0d0d0c",
+            surface: "#F8F4EC",
+            border: "#A8A19A"
+          },
+          fontFamily: {
+            headline: ["Instrument Sans", "sans-serif"],
+            body: ["Newsreader", "serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    
+    body {
+      background-color: #0d0d0c;
+      color: #ffffff;
+      cursor: default;
+    }
+
+    .bg-lumina-left {
+      background: radial-gradient(circle at 100% 50%, rgba(232, 93, 34, 0.08) 0%, #0d0d0c 70%);
+    }
+
+    .bg-lumina-right {
+      background: 
+        radial-gradient(circle at 70% 60%, rgba(232, 93, 34, 0.35) 0%, transparent 60%),
+        radial-gradient(circle at 30% 30%, rgba(124, 45, 18, 0.45) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(201, 139, 90, 0.2) 0%, transparent 50%),
+        #180a04;
+    }
+
+    .glass-card {
+      background: rgba(18, 18, 18, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(168, 161, 154, 0.15);
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.65); opacity: 0; }
+      50% { opacity: 0.5; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+
+    .animate-pulse-ring {
+      animation: pulse-ring 4s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+    }
+  </style>
+</head>
+<body class="font-body antialiased selection:bg-primary selection:text-white">
+
+  <!-- Floating Nav Header -->
+  <header class="fixed top-0 right-0 z-50 flex justify-end items-center px-8 py-6 bg-transparent">
+    <nav class="flex gap-6 items-center font-headline font-medium uppercase text-xs tracking-widest">
+      <a href="dashboard_overview.html" class="text-neutral-400 hover:text-white transition-colors">Terminal</a>
+      <a href="registry.html" class="text-neutral-400 hover:text-white transition-colors">Registry</a>
+      <a href="sign_in.html" class="text-neutral-400 hover:text-white transition-colors">Sign In</a>
+      <a href="sign_in.html" class="text-primary hover:text-primary/80 transition-colors border border-primary/20 px-3 py-1 rounded-sm">Register</a>
+    </nav>
+  </header>
+
+  <!-- Main Grid Container -->
+  <main class="grid grid-cols-1 lg:grid-cols-12 min-h-screen w-full">
+    
+    <!-- Left Pane: Copy & Details -->
+    <section class="lg:col-span-7 p-8 md:p-16 lg:p-24 flex flex-col justify-between bg-lumina-left relative border-b lg:border-b-0 lg:border-r border-neutral-900 min-h-[90vh] lg:min-h-screen">
+      
+      <!-- Vertical Rotated System Branding -->
+      <div class="absolute left-6 top-1/2 -translate-y-1/2 rotate-180 select-none text-[9px] tracking-[0.3em] font-mono text-neutral-500 uppercase [writing-mode:vertical-lr] hidden xl:flex items-center gap-4">
+        <span class="h-12 w-[1px] bg-neutral-800"></span>
+        LUMINA — BRAND INTELLIGENCE SYSTEM
+      </div>
+
+      <!-- Top Metadata -->
+      <div class="font-mono text-[10px] text-neutral-600 tracking-widest xl:pl-8 select-none">
+        SIGNAL / 04 // CLARITY INDEX
+      </div>
+
+      <!-- Main Heading and CTA Block -->
+      <div class="my-auto xl:pl-8 space-y-10 max-w-xl">
+        <div class="relative">
+          <!-- Blurred ghost text layer -->
+          <div class="absolute -top-7 left-0 text-white opacity-[0.12] blur-[8px] select-none pointer-events-none font-headline font-light text-6xl md:text-8xl tracking-tight leading-[1.04]">
+            Decode
+          </div>
+          <h1 class="text-white font-headline font-light text-6xl md:text-8xl tracking-tight leading-[1.04]">
+            Decode <br/>
+            the signal. <br/>
+            Design the <br/>
+            <span class="font-body italic text-accent font-normal">system<span class="text-primary font-sans font-bold">.</span></span>
+          </h1>
+        </div>
+
+        <p class="font-body text-neutral-300 text-lg leading-relaxed max-w-md">
+          We transform scattered product, market, and brand inputs into sharper positioning, stronger identity systems, and launch-ready digital experiences.
+        </p>
+
+        <!-- Stats rows -->
+        <div class="grid grid-cols-3 gap-4 border-t border-b border-neutral-900/80 py-6 text-white select-none">
+          <div>
+            <div class="text-3xl font-headline font-light">87%</div>
+            <div class="text-[9px] font-mono text-neutral-400 tracking-wider uppercase mt-1">CLARITY LIFT</div>
+          </div>
+          <div class="border-l border-neutral-900/80 pl-4 md:pl-6">
+            <div class="text-3xl font-headline font-light">14D</div>
+            <div class="text-[9px] font-mono text-neutral-400 tracking-wider uppercase mt-1">AUDIT SPRINT</div>
+          </div>
+          <div class="border-l border-neutral-900/80 pl-4 md:pl-6">
+            <div class="text-3xl font-headline font-light">3X</div>
+            <div class="text-[9px] font-mono text-neutral-400 tracking-wider uppercase mt-1">LAUNCH FOCUS</div>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex flex-wrap items-center gap-8 pt-4">
+          <a href="dashboard_overview.html" class="bg-primary hover:bg-primary/95 text-white font-headline font-medium px-8 py-3.5 flex items-center gap-3 transition-colors text-sm tracking-wide rounded-sm">
+            Start a brand audit
+            <span class="material-symbols-outlined text-sm">arrow_outward</span>
+          </a>
+
+          <a href="sign_in.html" class="text-white hover:text-accent font-headline font-medium flex items-center gap-2.5 transition-colors text-sm tracking-wide">
+            View the system
+            <span class="material-symbols-outlined text-xl text-neutral-400">play_circle</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="font-mono text-[9px] text-neutral-600 tracking-widest xl:pl-8">
+        © 2026 LUMINA BRAND INTELLIGENCE SYSTEM // ALL RIGHTS RESERVED
+      </div>
+    </section>
+
+    <!-- Right Pane: Interactive Glass Panels & Telemetry -->
+    <section class="lg:col-span-5 bg-lumina-right p-8 md:p-12 lg:p-16 flex flex-col justify-between relative min-h-[600px] lg:min-h-screen border-t lg:border-t-0 border-neutral-900 overflow-hidden">
+      
+      <!-- Concentric SVGs -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
+        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80%" cy="30%" r="90" stroke="#E85D22" strokeWidth="0.5" fill="none" opacity="0.3"></circle>
+          <circle cx="80%" cy="30%" r="180" stroke="#E85D22" strokeWidth="0.5" fill="none" opacity="0.2"></circle>
+          <circle cx="80%" cy="30%" r="270" stroke="#E85D22" strokeWidth="0.5" fill="none" opacity="0.15"></circle>
+          <circle cx="80%" cy="30%" r="360" stroke="#E85D22" strokeWidth="0.5" fill="none" opacity="0.08"></circle>
+          
+          <line x1="80%" y1="30%" x2="0%" y2="70%" stroke="#C98B5A" strokeWidth="0.5" opacity="0.1"></line>
+          <line x1="80%" y1="30%" x2="100%" y2="0%" stroke="#C98B5A" strokeWidth="0.5" opacity="0.15"></line>
+          
+          <circle cx="80%" cy="30%" r="4" fill="#E85D22"></circle>
+        </svg>
+      </div>
+
+      <!-- Coordinates label -->
+      <span class="absolute top-1/4 left-1/4 font-mono text-[9px] text-neutral-500 tracking-[0.25em] select-none uppercase">
+        SIGNAL / 04
+      </span>
+
+      <!-- Market Noise Card (Glass) -->
+      <div class="glass-card p-5 w-full max-w-xs ml-auto z-10 rounded-sm">
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-mono text-[9px] text-neutral-400 tracking-wider">MARKET NOISE</span>
+          <span class="font-mono text-[9px] text-primary font-bold">-42%</span>
+        </div>
+        
+        <div class="h-1 w-full bg-neutral-900 rounded-full mb-3 overflow-hidden">
+          <div class="h-full bg-primary rounded-full" style="width: 42%;"></div>
+        </div>
+        
+        <p class="font-body text-xs text-neutral-300 leading-normal">
+          Weak signals removed from the positioning model.
+        </p>
+      </div>
+
+      <!-- Live Brand Signal Audit Card (Glass) -->
+      <div class="glass-card p-6 w-full max-w-md mt-auto z-10 flex flex-col gap-5 rounded-sm">
+        
+        <!-- Card Header -->
+        <div class="flex justify-between items-center border-b border-neutral-800/80 pb-4">
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            <span class="font-headline text-[10px] font-bold text-white uppercase tracking-wider">Live Brand Signal Audit</span>
+          </div>
+          <span class="font-mono text-[10px] text-primary tracking-widest font-bold">ACTIVE</span>
+        </div>
+
+        <!-- Clarity score & small target radar -->
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="font-mono text-[9px] text-neutral-400 tracking-widest block uppercase mb-1">CLARITY SCORE</span>
+            <div class="flex items-baseline">
+              <span class="text-5xl font-headline font-light text-white leading-none">87</span>
+              <span class="text-lg font-headline font-bold text-primary ml-0.5">%</span>
+            </div>
+          </div>
+          
+          <div class="relative w-14 h-14 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border border-neutral-800 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full border border-neutral-700/50 flex items-center justify-center">
+                <div class="w-6 h-6 rounded-full border border-neutral-600/30 flex items-center justify-center">
+                  <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_#E85D22]"></span>
+                </div>
+              </div>
+            </div>
+            <div class="absolute w-full h-[1px] bg-neutral-800/30"></div>
+            <div class="absolute h-full w-[1px] bg-neutral-800/30"></div>
+          </div>
+        </div>
+
+        <!-- Progress bars -->
+        <div class="space-y-3.5">
+          <div class="space-y-1">
+            <div class="flex justify-between font-mono text-[9px] text-neutral-300">
+              <span>Positioning strength</span>
+              <span class="text-white">92%</span>
+            </div>
+            <div class="h-1 w-full bg-neutral-900 rounded-full overflow-hidden">
+              <div class="h-full bg-primary rounded-full" style="width: 92%;"></div>
+            </div>
+          </div>
+          
+          <div class="space-y-1">
+            <div class="flex justify-between font-mono text-[9px] text-neutral-300">
+              <span>Message hierarchy</span>
+              <span class="text-white">76%</span>
+            </div>
+            <div class="h-1 w-full bg-neutral-900 rounded-full overflow-hidden">
+              <div class="h-full bg-accent rounded-full animate-pulse-slow" style="width: 76%;"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between font-mono text-[9px] text-neutral-300">
+              <span>Launch readiness</span>
+              <span class="text-white">84%</span>
+            </div>
+            <div class="h-1 w-full bg-neutral-900 rounded-full overflow-hidden">
+              <div class="h-full bg-neutral-400 rounded-full" style="width: 84%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bento stats boxes -->
+        <div class="grid grid-cols-2 gap-3 border-t border-neutral-800/80 pt-4">
+          <div class="bg-black/35 border border-neutral-800/40 p-3 rounded-sm">
+            <span class="font-mono text-[8px] text-neutral-500 uppercase tracking-wider block mb-0.5">SIGNAL GAP</span>
+            <span class="font-headline text-xs font-medium text-white">Pricing story</span>
+          </div>
+          <div class="bg-black/35 border border-neutral-800/40 p-3 rounded-sm">
+            <span class="font-mono text-[8px] text-neutral-500 uppercase tracking-wider block mb-0.5">NEXT MOVE</span>
+            <span class="font-headline text-xs font-medium text-white">Refine CTA path</span>
+          </div>
+        </div>
+
+        <!-- Generate strategic brief footer -->
+        <div class="flex justify-between items-center border-t border-neutral-800/80 pt-4 mt-1">
+          <span class="font-headline text-xs text-neutral-300">Generate strategic brief</span>
+          <a href="dashboard_overview.html" class="w-7 h-7 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center text-white transition-colors">
+            <span class="material-symbols-outlined text-[15px] font-bold">arrow_outward</span>
+          </a>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    console.log("LUMINA System Initialized. Let's shape the future. Today.");
+  </script>
+</body>
+</html>

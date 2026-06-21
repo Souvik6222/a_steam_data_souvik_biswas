@@ -21,7 +21,7 @@ const User = require('../models/User');
  */
 function generateToken(userId, role) {
   const payload = { id: userId, role };
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.JWT_SECRET || 'steam_games_default_secret_key_2026_xyz';
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   return jwt.sign(payload, secret, { expiresIn });
 }
