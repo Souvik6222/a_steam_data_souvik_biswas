@@ -1,238 +1,354 @@
-# NEXUS — Full-Stack Steam Games Analytics & Management Dashboard
+<div align="center">
 
-NEXUS is a beginner-friendly, production-style full-stack web application designed for exploring, curating, and analyzing Steam-style game data. The project couples a powerful **Node.js/Express/MongoDB** backend API with a modern, responsive **Vite/React** frontend dashboard styled after the premium, dark-slate **Lumina** design system.
+<img src="https://img.shields.io/badge/NEXUS-Steam%20Analytics%20Hub-e85d22?style=for-the-badge&logo=steam&logoColor=white" />
+
+# NEXUS — Steam Games Analytics & Management Dashboard
+
+**A production-style full-stack web application for exploring, curating, and analyzing Steam game data.**
+
+<br/>
+
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://mongoosejs.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Redux](https://img.shields.io/badge/Redux-Toolkit-764ABC?style=flat-square&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
+[![JWT](https://img.shields.io/badge/Auth-JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](./LICENSE)
+
+</div>
 
 ---
 
-## 🎮 Interactive System Architecture
+## 🏗️ System Architecture
 
-The following diagram illustrates the data flow, request lifecycle, state management loop, and supporting tools of the NEXUS application:
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         NEXUS — Application Flow                         │
+└──────────────────────────────────────────────────────────────────────────┘
 
-```mermaid
-graph TD
-    %% Styling Class Definitions
-    classDef client fill:#1e293b,stroke:#e85d22,stroke-width:2px,color:#ffffff
-    classDef interceptor fill:#0f172a,stroke:#c98b5a,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5
-    classDef server fill:#1e293b,stroke:#06b6d4,stroke-width:2px,color:#ffffff
-    classDef db fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#ffffff
-    classDef scripts fill:#27272a,stroke:#71717a,stroke-width:1px,color:#a1a1aa
+  ╔═══════════════════════════════╗
+  ║   🖥️  FRONTEND  (React/Vite) ║
+  ║  ─────────────────────────── ║
+  ║  📄 Pages & Layouts          ║
+  ║     LandingPage, Dashboard   ║
+  ║     Registry, Analytics      ║
+  ║                              ║
+  ║  🗄️  Redux Toolkit Store      ║
+  ║     Auth State, Game Cache   ║
+  ║                              ║
+  ║  📡 Axios Service (api.js)   ║
+  ╚═══════════╤══════════════════╝
+              │
+              │  ┌──────────────────────────────────────────┐
+              │  │     🔁  INTERCEPTOR LAYER                │
+              │  │  ──────────────────────────────────────  │
+              ├──►  ➡️ Request Interceptor                  │
+              │  │     Reads localStorage → injects JWT     │
+              │  │     Bearer token on every request        │
+              │  │                                          │
+              │  │  ⬅️ Response Interceptor                 │
+              │  │     401 → clears token, triggers logout  │
+              │  │     Normalizes all error payloads        │
+              └──┤                                          │
+                 └────────────────┬─────────────────────────┘
+                                  │
+                                  ▼ HTTP Requests
+  ╔═══════════════════════════════════════════════════════╗
+  ║   ⚙️  BACKEND  (Node.js / Express API)               ║
+  ║  ──────────────────────────────────────────────────  ║
+  ║   server.js ─── Middleware Stack ─── Master Router   ║
+  ║                                                      ║
+  ║  🛡️  Security Middleware Pipeline:                   ║
+  ║     CORS → express.json → Morgan logger              ║
+  ║     → Custom logger → Rate limiter (100/15min)       ║
+  ║                                                      ║
+  ║  🔀  API Routes (/api/v1/)                           ║
+  ║     /auth        /games         /analytics           ║
+  ║     /stats       /search        /admin               ║
+  ║     /jwt         /filter        /trending            ║
+  ║                                                      ║
+  ║  📦  Controllers → Services → Mongoose Queries       ║
+  ╚════════════════════════╤══════════════════════════════╝
+                           │
+                           ▼ Mongoose ODM
+  ╔══════════════════════════════════════════════════╗
+  ║   🍃  DATABASE  (MongoDB)                        ║
+  ║  ──────────────────────────────────────────────  ║
+  ║   👤 User Collection                             ║
+  ║      name · email · password (bcrypt) · role     ║
+  ║                                                  ║
+  ║   🎮 Game Collection                             ║
+  ║      appid · title · genre · price · rating      ║
+  ║      platforms · tags · reviews · dlc            ║
+  ╚══════════════════════════════════════════════════╝
 
-    subgraph FE ["FRONTEND (Vite / React Client)"]
-        UI["Lumina UI Pages & Layouts <br/> (Tailwind CSS & Material UI)"]
-        Store["Redux Toolkit Store <br/> (Auth State & Dashboard States)"]
-        Axios["Axios Client Service <br/> (api.js)"]
-    end
-
-    subgraph INT ["INTERCEPTOR LAYER"]
-        ReqInt["Request Interceptor <br/> (Appends Bearer Token)"]
-        ResInt["Response Interceptor <br/> (Validates 401s / Standardizes Errors)"]
-    end
-
-    subgraph BE ["BACKEND (Node.js / Express Server)"]
-        Entry["server.js Entrypoint"]
-        Middlewares["Middleware Stack <br/> (CORS, Rate Limiters, Custom Loggers)"]
-        Router["Express Master Router <br/> (api/v1/)"]
-        Controllers["Controllers & Services <br/> (Auth, Games CRUD, Analytics, Stats)"]
-    end
-
-    subgraph DB ["DATABASE (MongoDB)"]
-        Mongoose["Mongoose Object Modeling"]
-        Schemas["User & Game Collections"]
-    end
-
-    subgraph DevOps ["DEV & DEPLOYMENT UTILITIES"]
-        Seeder["seedData.js Seeder"]
-        AdminGen["createAdmin.js CLI Script"]
-        PostmanGen["generatePostman.js compiler"]
-    end
-
-    %% Relations
-    UI --> Store
-    Store --> Axios
-    Axios --> ReqInt
-    ReqInt -->|HTTP Requests| Entry
-    Entry --> Middlewares
-    Middlewares --> Router
-    Router --> Controllers
-    Controllers --> Mongoose
-    Mongoose --> Schemas
-
-    %% Error and Auth responses
-    Entry -.->|HTTP Responses| ResInt
-    ResInt -.->|Update Auth State| Store
-    ResInt -.->|Deliver Data / Normalized Errors| UI
-
-    %% Seeding relations
-    Seeder --> Mongoose
-    AdminGen --> Mongoose
-    PostmanGen -->|Inspects| Router
-
-    %% Apply Classes
-    class FE,UI,Store,Axios client;
-    class INT,ReqInt,ResInt interceptor;
-    class BE,Entry,Middlewares,Router,Controllers server;
-    class DB,Mongoose,Schemas db;
-    class DevOps,Seeder,AdminGen,PostmanGen scripts;
+  ╔═════════════════════════════════════════════════════════════════╗
+  ║   🛠️  DEVELOPER TOOLCHAIN                                      ║
+  ║  ─────────────────────────────────────────────────────────── ║
+  ║   📥 seedData.js         → Bulk-load game catalog from JSON   ║
+  ║   👑 createAdmin.js      → Provision an admin user via CLI    ║
+  ║   📬 generatePostman.js  → Compile live routes → Postman JSON ║
+  ║   🌐 homepageRenderer.js → Serve interactive API docs at /    ║
+  ╚═════════════════════════════════════════════════════════════════╝
 ```
 
-### Architecture Highlights
-1. **Unidirectional UI State Flow**: User interactions invoke actions dispatching to the **Redux Store**, driving the **Axios** client.
-2. **Decoupled API Interceptor Layer**: Sits transparently between client and server. Outgoing queries receive authentication tokens automatically, and incoming responses/errors are standardized before reaching UI components.
-3. **Robust Backend Middleware Pipeline**: Express uses security filters (CORS, Rate Limiting) and logging mechanisms to pre-process requests before matching endpoints in the **Master Router**.
-4. **Self-Documenting Code Base**: The routing hierarchy is scanned directly from the active router stack at compile time, feeding both the browser-accessible Developer Playground and the exported Postman collection.
-
 ---
 
-## 📂 Project Directory Structure
+## 📁 Directory Structure
+
+<details>
+<summary><b>Click to expand the full project tree</b></summary>
 
 ```
 a_steam_data_souvik_biswas/
-├── README.md                               ← This full-stack guide
-├── Steam_Games_API.postman_collection.json  ← Generated Postman v2.1.0 collection
-├── presentation_script.md                   ← Presentation talking points & guide
 │
-├── frontend/                               ← Vite + React Application
-│   ├── src/
-│   │   ├── components/                     ← Reusable UI blocks
-│   │   ├── hooks/                          ← Custom React hooks
-│   │   ├── layouts/                        ← Dashboard & general wrappers
-│   │   ├── pages/                          ← LandingPage, Auth, Dashboard, Registry
-│   │   ├── routes/                         ← Protected & public route guards
-│   │   ├── services/                       ← Axios API client with interceptors
-│   │   ├── store/                          ← Redux store configurations
-│   │   ├── App.jsx & main.jsx
-│   │   └── index.css                       ← Core styles & theme configurations
-│   ├── package.json
+├── 📄 README.md                              ← You are here
+├── 📬 Steam_Games_API.postman_collection.json ← Auto-generated Postman collection
+├── 🎤 presentation_script.md                 ← Slide-by-slide presentation guide
+│
+├── 🖥️  frontend/                             ← Vite + React Application
+│   ├── index.html
 │   ├── vite.config.js
-│   └── .env.development                    ← Frontend local environment config
+│   ├── .env.development                      ← VITE_API_URL config
+│   └── src/
+│       ├── App.jsx & main.jsx
+│       ├── index.css                         ← Lumina theme system
+│       ├── components/                       ← Reusable UI blocks
+│       ├── hooks/                            ← Custom React hooks
+│       ├── layouts/                          ← Dashboard shell layout
+│       ├── pages/
+│       │   ├── LandingPage.jsx               ← Aurora-animated hero page
+│       │   ├── auth/                         ← Login · Register · ForgotPassword
+│       │   ├── dashboard/                    ← Dashboard · Analytics · Registry · Admin
+│       │   └── games/                        ← GameDetails · CreateGame · EditGame
+│       ├── routes/
+│       │   ├── AppRouter.jsx                 ← Route definitions
+│       │   └── ProtectedRoute.jsx            ← JWT-guarded route wrapper
+│       ├── services/
+│       │   └── api.js                        ← Central Axios instance + interceptors
+│       └── store/                            ← Redux Toolkit slices & store config
 │
-└── backend/                                ← Express Backend Server
-    ├── server.js                           ← Entry point (starts the server)
+└── ⚙️  backend/                              ← Node.js + Express Server
+    ├── server.js                             ← Application entry point
+    ├── package.json
+    ├── .env                                  ← Secrets (never commit)
     ├── data/
-    │   └── sample-games.json               ← Seed dataset
-    ├── src/
-    │   ├── config/                         ← DB configurations & spec catalogs
-    │   ├── models/                         ← User & Game Schemas
-    │   ├── controllers/                    ← Express request handlers
-    │   ├── services/                       ← Database/Mongoose queries
-    │   ├── middlewares/                    ← Error handler, rate limiters, auth guards
-    │   ├── utils/                          ← Route scanner, response formatting
-    │   └── scripts/
-    │       ├── seedData.js                 ← Seeder script for game data
-    │       ├── createAdmin.js              ← CLI script to seed administrator accounts
-    │       └── generatePostman.js          ← Dynamic Postman generator script
-    └── package.json
+    │   └── sample-games.json                 ← Seed dataset (1000+ games)
+    └── src/
+        ├── config/
+        │   ├── db.js                         ← MongoDB connection
+        │   └── routesSpec.js                 ← API metadata catalogue
+        ├── models/
+        │   ├── User.js                       ← User schema + bcrypt hooks
+        │   └── Game.js                       ← Game schema
+        ├── controllers/                      ← HTTP request handlers
+        ├── services/                         ← Mongoose queries & business logic
+        ├── routes/
+        │   ├── index.js                      ← Master router
+        │   ├── auth.routes.js
+        │   ├── game.routes.js
+        │   ├── filter.routes.js
+        │   ├── analytics.routes.js
+        │   ├── stats.routes.js
+        │   ├── search.routes.js
+        │   ├── admin.routes.js
+        │   └── jwt.routes.js
+        ├── middlewares/
+        │   ├── auth.middleware.js            ← JWT verification
+        │   ├── admin.middleware.js           ← Role guard
+        │   ├── error.middleware.js           ← Global error handler
+        │   ├── rateLimiter.middleware.js     ← 100 req/15min (10 on auth)
+        │   └── logger.middleware.js          ← Custom request logger
+        ├── utils/
+        │   ├── apiResponse.js               ← Standardized { success, message, data }
+        │   ├── asyncHandler.js              ← try/catch wrapper
+        │   ├── pagination.js                ← Page + limit helpers
+        │   ├── routeScanner.js              ← Live Express stack crawler
+        │   └── homepageRenderer.js          ← Interactive HTML API docs
+        └── scripts/
+            ├── seedData.js                  ← Load JSON into MongoDB
+            ├── createAdmin.js               ← Provision admin user via CLI
+            ├── generatePostman.js           ← Auto-generate Postman collection
+            └── testConnection.js            ← Verify DB connectivity
 ```
+
+</details>
 
 ---
 
-## ⚡ Setup & Installation
+## 🚀 Quick Start
 
 ### Prerequisites
-* **Node.js** (v18+)
-* **MongoDB** (Local database instance or a cloud-hosted MongoDB Atlas URI)
+
+| Tool | Minimum Version |
+|------|----------------|
+| Node.js | v18+ |
+| MongoDB | Local or Atlas |
+| npm | v9+ |
 
 ---
 
-### Step 1: Configure & Start the Backend
+### 1️⃣ Backend Setup
 
-1. **Navigate to the Backend Directory & Install Dependencies:**
-   ```bash
-   cd backend
-   npm install
-   ```
-
-2. **Configure Environment Variables:**
-   Create a `.env` file in the `backend/` directory:
-   ```env
-   PORT=5000
-   MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/steam_games_db?retryWrites=true&w=majority
-   JWT_SECRET=your_super_secret_key_change_this_in_production
-   JWT_EXPIRES_IN=7d
-   NODE_ENV=development
-   ```
-
-3. **Seed Game Data:**
-   Load the default catalog into your MongoDB database:
-   ```bash
-   npm run seed
-   ```
-   *(To seed a custom dataset file, run `node src/scripts/seedData.js "C:/path/to/custom-games.json"`)*
-
-4. **Create a Test Administrator Account:**
-   Seed a verified admin user (`admin@example.com` / `adminpassword123`):
-   ```bash
-   node src/scripts/createAdmin.js
-   ```
-
-5. **Start the API Server:**
-   * **Development Mode (Auto-restart on save):**
-     ```bash
-     npm run dev
-     ```
-   * **Production Mode:**
-     ```bash
-     npm start
-     ```
-   Expect output confirming a successful MongoDB connection and the server listening on Port 5000.
-
----
-
-### Step 2: Configure & Start the Frontend
-
-1. **Navigate to the Frontend Directory & Install Dependencies:**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-2. **Configure Environment Variables:**
-   A `.env.development` file is provided, directing Axios queries to the backend:
-   ```env
-   VITE_API_URL=http://localhost:5000
-   ```
-
-3. **Launch the Development Server:**
-   ```bash
-   npm run dev
-   ```
-   This boots the Vite application (typically on `http://localhost:5173`). Open the browser to explore.
-
----
-
-## 🛠️ Essential Automation Scripts
-
-### Admin Seeding (`createAdmin.js`)
-Administrators have access to exclusive routes (game creation, editing, deleting, database monitoring). Run this script to generate a clean admin user directly:
 ```bash
-node backend/src/scripts/createAdmin.js
+# Install dependencies
+cd backend
+npm install
+
+# Create your .env file
+cp .env.example .env   # then edit with your values
 ```
 
-### Dynamic Postman Collection Generation (`generatePostman.js`)
-To prevent documentation from drifting when routing specs change, run:
-```bash
-node backend/src/scripts/generatePostman.js
+```env
+# backend/.env
+PORT=5000
+MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/steam_games_db
+JWT_SECRET=your_super_secret_key
+JWT_EXPIRES_IN=7d
+NODE_ENV=development
 ```
-This script inspects all active express endpoints at runtime and exports an updated `Steam_Games_API.postman_collection.json` file to the project root, ready to import.
+
+```bash
+# Seed game data
+npm run seed
+
+# Create an admin user
+node src/scripts/createAdmin.js
+
+# Start dev server (auto-restart on save)
+npm run dev
+```
+
+> ✅ Server is live at `http://localhost:5000`  
+> ✅ Open in browser to view the **interactive API documentation**
 
 ---
 
-## 🔒 API Endpoints & Playground
+### 2️⃣ Frontend Setup
 
-Base URL: `http://localhost:5000`
+```bash
+# Install dependencies
+cd frontend
+npm install
 
-* **Auth Routes (`/api/v1/auth/*`)**: Register, login, change passwords, and fetch authenticated profiles.
-* **Games Directory (`/api/v1/games/*`)**: 
-  - CRUD operations (`POST`, `PUT`, `DELETE` are protected behind administrator guards).
-  - Review operations (authenticated users can write, update, or remove reviews).
-  - Multi-parameter filtering (genres, price, rating, year, downloads, discounts).
-* **Analytics (`/api/v1/analytics/games/*`)**: Revenue analysis, platform distributions, genre count metrics, and release volume charts.
-* **Live API Playground**: Open `http://localhost:5000` in the browser to view the dynamic documentation. You can test public `GET` endpoints with click-to-open links containing mock query parameters.
+# Start the Vite dev server
+npm run dev
+```
+
+> ✅ App is live at `http://localhost:5173`
+
+```env
+# frontend/.env.development  (already included)
+VITE_API_URL=http://localhost:5000
+```
 
 ---
 
-## 🚀 Recent Modifications
+## 📡 API Endpoints Overview
 
-1. **Axios Centralization**: Refactored the frontend's networking in `api.js` to run on a central axios instance equipped with automatic token injection interceptors.
-2. **Admin Auto-Creation**: Introduced the `createAdmin.js` script to instantly provision accounts with access levels above standard users.
-3. **Auto-Documenter**: Created the Postman generation pipeline, mapping code routes directly to importable REST requests.
+> **Legend:** 🟢 Public — 🔒 Auth Required — 🛡️ Admin Only
+
+### Authentication — `/api/v1/auth`
+
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| `POST` | `/register` | 🟢 Public |
+| `POST` | `/login` | 🟢 Public |
+| `GET` | `/profile` | 🔒 Auth |
+| `PATCH` | `/profile` | 🔒 Auth |
+| `POST` | `/change-password` | 🔒 Auth |
+
+### Games — `/api/v1/games`
+
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| `GET` | `/` | 🟢 Public |
+| `GET` | `/:appid` | 🟢 Public |
+| `GET` | `/random` | 🟢 Public |
+| `POST` | `/` | 🛡️ Admin |
+| `PUT` | `/:appid` | 🛡️ Admin |
+| `DELETE` | `/:appid` | 🛡️ Admin |
+| `POST` | `/:appid/reviews` | 🔒 Auth |
+
+### Analytics — `/api/v1/analytics/games`
+
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| `GET` | `/top-rated` | 🟢 Public |
+| `GET` | `/most-downloaded` | 🟢 Public |
+| `GET` | `/revenue` | 🟢 Public |
+| `GET` | `/genre-distribution` | 🟢 Public |
+| `GET` | `/platform-distribution` | 🟢 Public |
+| `GET` | `/trending` | 🟢 Public |
+| `GET` | `/release-trends` | 🟢 Public |
+
+> 📬 **Import the full Postman collection** → [`Steam_Games_API.postman_collection.json`](./Steam_Games_API.postman_collection.json)
+
+---
+
+## 🛠️ Developer Scripts
+
+| Script | Command | What It Does |
+|--------|---------|--------------|
+| Start server | `npm start` | Run in production mode |
+| Dev server | `npm run dev` | Nodemon auto-restart |
+| Seed games | `npm run seed` | Bulk-load `sample-games.json` into MongoDB |
+| Create admin | `node src/scripts/createAdmin.js` | Provision `admin@example.com` with role `admin` |
+| Generate Postman | `node src/scripts/generatePostman.js` | Compile live routes into Postman JSON |
+| Test DB | `npm run test:db` | Verify MongoDB connection |
+
+---
+
+## 🔐 Security Model
+
+```
+Request Received
+      │
+      ▼
+  [CORS Check]  ──── blocked? ──→  403 Forbidden
+      │
+      ▼
+  [Rate Limiter] ─── too many? ──→ 429 Too Many Requests
+      │
+      ▼
+  [Route Match]  ─── no match? ──→ 404 Not Found
+      │
+      ▼
+  [Auth Middleware] ─ no token? ──→ 401 Unauthorized
+  (protected routes)
+      │
+      ▼
+  [Admin Middleware] ─ wrong role? → 403 Forbidden
+  (admin routes)
+      │
+      ▼
+  [Controller → Service → DB]
+      │
+      ▼
+  { success: true, message: "...", data: { ... } }
+```
+
+---
+
+## 🧩 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend Framework | React 19 + Vite 8 |
+| State Management | Redux Toolkit |
+| HTTP Client | Axios (with interceptors) |
+| UI Styling | Tailwind CSS v4 + Material UI |
+| Backend Framework | Node.js + Express 4 |
+| Database | MongoDB + Mongoose |
+| Authentication | JWT + bcryptjs |
+| Rate Limiting | express-rate-limit |
+| API Documentation | Dynamic route scanner + HTML renderer |
+| Dev Tools | Nodemon, Postman collection generator |
+
+---
+
+## 📝 License
+
+MIT — This is a learning and portfolio project by **Souvik Biswas**.
