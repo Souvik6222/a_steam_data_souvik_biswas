@@ -4,47 +4,86 @@ NEXUS is a beginner-friendly, production-style full-stack web application design
 
 ---
 
-## Architecture Overview
+## 🎮 Interactive System Architecture
 
-NEXUS is built using a decoupled, client-server architecture:
+The following diagram illustrates the data flow, request lifecycle, state management loop, and supporting tools of the NEXUS application:
 
+```mermaid
+graph TD
+    %% Styling Class Definitions
+    classDef client fill:#1e293b,stroke:#e85d22,stroke-width:2px,color:#ffffff
+    classDef interceptor fill:#0f172a,stroke:#c98b5a,stroke-width:2px,color:#ffffff,stroke-dasharray: 5 5
+    classDef server fill:#1e293b,stroke:#06b6d4,stroke-width:2px,color:#ffffff
+    classDef db fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#ffffff
+    classDef scripts fill:#27272a,stroke:#71717a,stroke-width:1px,color:#a1a1aa
+
+    subgraph FE ["FRONTEND (Vite / React Client)"]
+        UI["Lumina UI Pages & Layouts <br/> (Tailwind CSS & Material UI)"]
+        Store["Redux Toolkit Store <br/> (Auth State & Dashboard States)"]
+        Axios["Axios Client Service <br/> (api.js)"]
+    end
+
+    subgraph INT ["INTERCEPTOR LAYER"]
+        ReqInt["Request Interceptor <br/> (Appends Bearer Token)"]
+        ResInt["Response Interceptor <br/> (Validates 401s / Standardizes Errors)"]
+    end
+
+    subgraph BE ["BACKEND (Node.js / Express Server)"]
+        Entry["server.js Entrypoint"]
+        Middlewares["Middleware Stack <br/> (CORS, Rate Limiters, Custom Loggers)"]
+        Router["Express Master Router <br/> (api/v1/)"]
+        Controllers["Controllers & Services <br/> (Auth, Games CRUD, Analytics, Stats)"]
+    end
+
+    subgraph DB ["DATABASE (MongoDB)"]
+        Mongoose["Mongoose Object Modeling"]
+        Schemas["User & Game Collections"]
+    end
+
+    subgraph DevOps ["DEV & DEPLOYMENT UTILITIES"]
+        Seeder["seedData.js Seeder"]
+        AdminGen["createAdmin.js CLI Script"]
+        PostmanGen["generatePostman.js compiler"]
+    end
+
+    %% Relations
+    UI --> Store
+    Store --> Axios
+    Axios --> ReqInt
+    ReqInt -->|HTTP Requests| Entry
+    Entry --> Middlewares
+    Middlewares --> Router
+    Router --> Controllers
+    Controllers --> Mongoose
+    Mongoose --> Schemas
+
+    %% Error and Auth responses
+    Entry -.->|HTTP Responses| ResInt
+    ResInt -.->|Update Auth State| Store
+    ResInt -.->|Deliver Data / Normalized Errors| UI
+
+    %% Seeding relations
+    Seeder --> Mongoose
+    AdminGen --> Mongoose
+    PostmanGen -->|Inspects| Router
+
+    %% Apply Classes
+    class FE,UI,Store,Axios client;
+    class INT,ReqInt,ResInt interceptor;
+    class BE,Entry,Middlewares,Router,Controllers server;
+    class DB,Mongoose,Schemas db;
+    class DevOps,Seeder,AdminGen,PostmanGen scripts;
 ```
-                  ┌──────────────────────────────────────────┐
-                  │          Vite + React Frontend           │
-                  │   (Tailwind CSS, MUI, Redux Toolkit)     │
-                  └────────────────────┬─────────────────────┘
-                                       │
-                        Axios Requests │ (Automatic JWT Bearer Token via
-                                       │  Request/Response Interceptors)
-                                       ▼
-                  ┌──────────────────────────────────────────┐
-                  │         Node.js + Express API            │
-                  │     (JWT, Rate Limiters, Morgan)         │
-                  └────────────────────┬─────────────────────┘
-                                       │
-                              Mongoose │ (Data Validation & Modeling)
-                                       ▼
-                  ┌──────────────────────────────────────────┐
-                  │            MongoDB Database              │
-                  │        (User Schema, Game Schema)        │
-                  └──────────────────────────────────────────┘
-```
 
-### 1. Frontend Architecture (React)
-- **Vite + React**: High-performance dev server and optimized production builds.
-- **Redux Toolkit**: Centralized store managing authentication, dashboard states, and error handling.
-- **Axios with Interceptors**: All outbound requests automatically attach JWT authorization headers from local storage. Response interceptors handle token expiration (`401 Unauthorized`) and normalize error payloads.
-- **Lumina Design Aesthetic**: Tailored CSS and Tailwind utility classes providing slate-dark backgrounds, glowing radial gradient blobs (auroras), glassmorphism panels, and smooth hover micro-animations.
-
-### 2. Backend Architecture (Express API)
-- **RESTful Design**: Structured resources with modular controllers, services, routes, and custom middleware.
-- **MongoDB + Mongoose**: Dynamic schema definition for User validation (including bcrypt hashing) and Game structure.
-- **Security & Reliability**: Built-in rate limiting (`express-rate-limit`), CORS handling, and automatic request loggers (`morgan` and custom stream loggers).
-- **Interactive Developer Landing Page**: Features a dynamic route scanner (`routeScanner.js`) that analyzes Express routes in memory and renders a beautiful live documentation page with API test paths.
+### Architecture Highlights
+1. **Unidirectional UI State Flow**: User interactions invoke actions dispatching to the **Redux Store**, driving the **Axios** client.
+2. **Decoupled API Interceptor Layer**: Sits transparently between client and server. Outgoing queries receive authentication tokens automatically, and incoming responses/errors are standardized before reaching UI components.
+3. **Robust Backend Middleware Pipeline**: Express uses security filters (CORS, Rate Limiting) and logging mechanisms to pre-process requests before matching endpoints in the **Master Router**.
+4. **Self-Documenting Code Base**: The routing hierarchy is scanned directly from the active router stack at compile time, feeding both the browser-accessible Developer Playground and the exported Postman collection.
 
 ---
 
-## Project Structure
+## 📂 Project Directory Structure
 
 ```
 a_steam_data_souvik_biswas/
@@ -87,11 +126,11 @@ a_steam_data_souvik_biswas/
 
 ---
 
-## Setup & Installation
+## ⚡ Setup & Installation
 
 ### Prerequisites
-- **Node.js** 18+ installed.
-- **MongoDB** local instance running, or a **MongoDB Atlas** cloud URI.
+* **Node.js** (v18+)
+* **MongoDB** (Local database instance or a cloud-hosted MongoDB Atlas URI)
 
 ---
 
@@ -127,11 +166,11 @@ a_steam_data_souvik_biswas/
    ```
 
 5. **Start the API Server:**
-   - **Development Mode (Auto-restart on save):**
+   * **Development Mode (Auto-restart on save):**
      ```bash
      npm run dev
      ```
-   - **Production Mode:**
+   * **Production Mode:**
      ```bash
      npm start
      ```
@@ -161,7 +200,7 @@ a_steam_data_souvik_biswas/
 
 ---
 
-## Essential Automation Scripts
+## 🛠️ Essential Automation Scripts
 
 ### Admin Seeding (`createAdmin.js`)
 Administrators have access to exclusive routes (game creation, editing, deleting, database monitoring). Run this script to generate a clean admin user directly:
@@ -178,21 +217,21 @@ This script inspects all active express endpoints at runtime and exports an upda
 
 ---
 
-## API Highlights
+## 🔒 API Endpoints & Playground
 
 Base URL: `http://localhost:5000`
 
-- **Auth Routes (`/api/v1/auth/*`)**: Register, login, change passwords, and fetch authenticated profiles.
-- **Games Directory (`/api/v1/games/*`)**: 
+* **Auth Routes (`/api/v1/auth/*`)**: Register, login, change passwords, and fetch authenticated profiles.
+* **Games Directory (`/api/v1/games/*`)**: 
   - CRUD operations (`POST`, `PUT`, `DELETE` are protected behind administrator guards).
   - Review operations (authenticated users can write, update, or remove reviews).
   - Multi-parameter filtering (genres, price, rating, year, downloads, discounts).
-- **Analytics (`/api/v1/analytics/games/*`)**: Revenue analysis, platform distributions, genre count metrics, and release volume charts.
-- **Live API Playground**: Open `http://localhost:5000` in the browser to view the dynamic documentation. You can test public `GET` endpoints with click-to-open links containing mock query parameters.
+* **Analytics (`/api/v1/analytics/games/*`)**: Revenue analysis, platform distributions, genre count metrics, and release volume charts.
+* **Live API Playground**: Open `http://localhost:5000` in the browser to view the dynamic documentation. You can test public `GET` endpoints with click-to-open links containing mock query parameters.
 
 ---
 
-## Recent Modifications
+## 🚀 Recent Modifications
 
 1. **Axios Centralization**: Refactored the frontend's networking in `api.js` to run on a central axios instance equipped with automatic token injection interceptors.
 2. **Admin Auto-Creation**: Introduced the `createAdmin.js` script to instantly provision accounts with access levels above standard users.
