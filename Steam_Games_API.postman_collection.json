@@ -1,0 +1,2587 @@
+{
+  "info": {
+    "_postman_id": "steam-games-api-collection-2026",
+    "name": "Steam Games API",
+    "description": "Complete REST API collection for the Steam-style games dashboard backend.\n\n**Base URL:** `http://localhost:5000`\n\n**Auth:** Most protected routes require a Bearer JWT token.\n1. Call `POST /api/v1/auth/login` to get a token.\n2. Copy the `data.token` value.\n3. In Postman, go to the collection → Variables and set `token` to the copied value.\n\n**Test Credentials:**\n- Regular User: `test@example.com` / `secret12`\n- Admin User: `admin@example.com` / `adminpassword123`\n\n**Response Shape:**\n```json\n{ \"success\": true, \"message\": \"...\", \"data\": { ... } }\n{ \"success\": false, \"message\": \"...\", \"error\": \"...\" }\n```",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "PASTE_YOUR_JWT_TOKEN_HERE",
+      "type": "string",
+      "description": "JWT token obtained from login or register response (data.token)"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health & System",
+      "description": "Public endpoints for checking server status and runtime info.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Check if the server is running. Returns uptime and current timestamp."
+          }
+        },
+        {
+          "name": "System Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/system/info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "system",
+                "info"
+              ]
+            },
+            "description": "Returns runtime info: API version, Node.js version, and environment."
+          }
+        },
+        {
+          "name": "System Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/system/version",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "system",
+                "version"
+              ]
+            },
+            "description": "Returns the current API version string."
+          }
+        },
+        {
+          "name": "API Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            },
+            "description": "Root welcome endpoint. Confirms the API is online."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Auth",
+      "description": "User registration, login, logout, and profile management.\n\n**Rate Limit:** Register and Login are limited to 10 requests per 15 minutes.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"secret12\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Create a new user account. Returns the user object and a JWT token.\n\n**Note:** The `role` field is blocked from being set to `admin` via this endpoint. All registered users get `role: user` by default.\n\n**Required fields:** name, email (valid format), password (min 6 chars)"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"secret12\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with email and password. Returns user object + JWT token.\n\nCopy `data.token` from the response and paste it into the collection `token` variable."
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as the admin user. Returns JWT token with role: admin.\n\nThis token is required for all `/api/v1/admin/*` routes and admin-only game CRUD operations."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Stateless logout — the server has no session to destroy. The client should delete the JWT token locally. Returns a confirmation message."
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "profile"
+              ]
+            },
+            "description": "Get the profile of the currently logged-in user.\n\n**Requires:** Bearer JWT token in Authorization header."
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"newemail@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "profile"
+              ]
+            },
+            "description": "Update the name or email of the logged-in user. Password changes are handled by the change-password endpoint.\n\n**Requires:** Bearer JWT token."
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"secret12\",\n  \"newPassword\": \"newsecret99\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Change the password for the logged-in user. Old password is verified before updating.\n\n**Requires:** Bearer JWT token.\n**Fields:** oldPassword, newPassword (min 6 chars)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎮 Games",
+      "description": "Browse, search, sort, and manage Steam-style game listings.",
+      "item": [
+        {
+          "name": "List All Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Results per page (default: 10)"
+                },
+                {
+                  "key": "genre",
+                  "value": "action",
+                  "disabled": true,
+                  "description": "Filter by genre"
+                },
+                {
+                  "key": "developer",
+                  "value": "valve",
+                  "disabled": true,
+                  "description": "Filter by developer"
+                },
+                {
+                  "key": "platform",
+                  "value": "windows",
+                  "disabled": true,
+                  "description": "Filter by platform"
+                },
+                {
+                  "key": "tag",
+                  "value": "multiplayer",
+                  "disabled": true,
+                  "description": "Filter by tag"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "0",
+                  "disabled": true,
+                  "description": "Minimum price"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "50",
+                  "disabled": true,
+                  "description": "Maximum price"
+                },
+                {
+                  "key": "rating",
+                  "value": "8",
+                  "disabled": true,
+                  "description": "Minimum rating"
+                },
+                {
+                  "key": "releaseYear",
+                  "value": "2024",
+                  "disabled": true,
+                  "description": "Filter by release year"
+                },
+                {
+                  "key": "discount",
+                  "value": "10",
+                  "disabled": true,
+                  "description": "Minimum discount %"
+                },
+                {
+                  "key": "multiplayer",
+                  "value": "true",
+                  "disabled": true,
+                  "description": "Multiplayer games only"
+                },
+                {
+                  "key": "freeToPlay",
+                  "value": "true",
+                  "disabled": true,
+                  "description": "Free-to-play games only"
+                },
+                {
+                  "key": "sort",
+                  "value": "rating",
+                  "disabled": true,
+                  "description": "Sort by: rating | price | downloads | releaseDate | popularity | title"
+                }
+              ]
+            },
+            "description": "Get a paginated list of games with optional filters.\n\n**Sort options:** `rating`, `price`, `downloads`, `releaseDate`, `popularity`, `title`"
+          }
+        },
+        {
+          "name": "Get Random Game",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/random",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "random"
+              ]
+            },
+            "description": "Returns a single randomly selected game from the database."
+          }
+        },
+        {
+          "name": "Get Game by AppID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001"
+              ]
+            },
+            "description": "Get a single game by its AppID. Replace `100001` with an actual AppID from your seeded data."
+          }
+        },
+        {
+          "name": "Check Game Exists",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/exists/100001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "exists",
+                "100001"
+              ]
+            },
+            "description": "Check if a game with the given AppID exists in the database. Returns a boolean."
+          }
+        },
+        {
+          "name": "Get Game Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "summary"
+              ]
+            },
+            "description": "Get a summarized view of a game (title, price, rating, platforms, genres)."
+          }
+        },
+        {
+          "name": "Get Game Screenshots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/screenshots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "screenshots"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game Trailers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/trailers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "trailers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "reviews"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game System Requirements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/system-requirements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "system-requirements"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game DLC",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/dlc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "dlc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game Achievements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/achievements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "achievements"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game Updates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/updates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "updates"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Game Update History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Related Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/related",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "related"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Review (Auth Required)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Amazing game, highly recommend!\",\n  \"rating\": 9\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "reviews"
+              ]
+            },
+            "description": "Add a review to a game. Requires a valid JWT token.\n\n**Fields:** text (string), rating (number 1-10)"
+          }
+        },
+        {
+          "name": "Update Review (Auth Required)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Updated review text\",\n  \"rating\": 8\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/reviews/:reviewId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "reviews",
+                ":reviewId"
+              ],
+              "variable": [
+                {
+                  "key": "reviewId",
+                  "value": "REVIEW_ID_HERE",
+                  "description": "MongoDB _id of the review"
+                }
+              ]
+            },
+            "description": "Update your own review. Replace `:reviewId` with the actual review `_id`."
+          }
+        },
+        {
+          "name": "Delete Review (Auth Required)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/reviews/:reviewId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "reviews",
+                ":reviewId"
+              ],
+              "variable": [
+                {
+                  "key": "reviewId",
+                  "value": "REVIEW_ID_HERE",
+                  "description": "MongoDB _id of the review"
+                }
+              ]
+            },
+            "description": "Delete your own review. Replace `:reviewId` with the actual review `_id`."
+          }
+        },
+        {
+          "name": "Archive Game (Auth Required)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/archive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "archive"
+              ]
+            },
+            "description": "Soft-delete (archive) a game. The game is hidden but not removed from the database. Any logged-in user can archive."
+          }
+        },
+        {
+          "name": "Restore Game (Auth Required)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001",
+                "restore"
+              ]
+            },
+            "description": "Restore a previously archived game. Any logged-in user can restore."
+          }
+        },
+        {
+          "name": "Create Game (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appid\": 999999,\n  \"title\": \"New Game Title\",\n  \"developer\": \"Indie Dev\",\n  \"publisher\": \"Publisher Inc\",\n  \"genres\": [\"Action\", \"Adventure\"],\n  \"tags\": [\"singleplayer\", \"story-rich\"],\n  \"platforms\": [\"windows\", \"mac\"],\n  \"price\": 19.99,\n  \"rating\": 8.5,\n  \"releaseDate\": \"2025-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games"
+              ]
+            },
+            "description": "Create a new game. **Requires admin role JWT token.** Login as `admin@example.com` to get the correct token."
+          }
+        },
+        {
+          "name": "Replace Game (Admin Only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Completely Replaced Game\",\n  \"developer\": \"New Dev\",\n  \"price\": 29.99\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001"
+              ]
+            },
+            "description": "Full replacement of a game document. **Requires admin role JWT token.**"
+          }
+        },
+        {
+          "name": "Update Game (Admin Only)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 9.99,\n  \"rating\": 9.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001"
+              ]
+            },
+            "description": "Partial update of a game. Only include the fields you want to change. **Requires admin role JWT token.**"
+          }
+        },
+        {
+          "name": "Delete Game (Admin Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/100001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "100001"
+              ]
+            },
+            "description": "Permanently delete a game by AppID. **Requires admin role JWT token.**"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔽 Game Sort Presets",
+      "description": "Pre-configured sort endpoints — all public, no auth required.",
+      "item": [
+        {
+          "name": "Sort by Price (Descending)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/sort/price-desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "sort",
+                "price-desc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by Rating (Descending)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/sort/rating-desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "sort",
+                "rating-desc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by Downloads (Descending)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/sort/downloads-desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "sort",
+                "downloads-desc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by Release Date (Descending)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/sort/releaseDate-desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "sort",
+                "releaseDate-desc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sort by Popularity (Descending)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/sort/popularity-desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "sort",
+                "popularity-desc"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📂 Game Filters by Category",
+      "description": "Filter games by genre, developer, platform, tag, etc. All public.",
+      "item": [
+        {
+          "name": "Filter by Genre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/genre/action",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "genre",
+                "action"
+              ]
+            },
+            "description": "Replace `action` with any genre name (e.g. RPG, Shooter, Strategy)."
+          }
+        },
+        {
+          "name": "Filter by Developer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/developer/valve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "developer",
+                "valve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Publisher",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/publisher/ea",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "publisher",
+                "ea"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Platform",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/platform/windows",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "platform",
+                "windows"
+              ]
+            },
+            "description": "Platforms: windows | mac | linux"
+          }
+        },
+        {
+          "name": "Filter by Tag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/tag/multiplayer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "tag",
+                "multiplayer"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Release Year",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/release-year/2024",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "release-year",
+                "2024"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Rating",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/rating/8",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "rating",
+                "8"
+              ]
+            },
+            "description": "Get games with rating >= the specified value."
+          }
+        },
+        {
+          "name": "Filter by Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/price/20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "price",
+                "20"
+              ]
+            },
+            "description": "Get games with price <= the specified value."
+          }
+        },
+        {
+          "name": "Filter by Feature",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/feature/achievements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "feature",
+                "achievements"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎛️ Game Preset Filters",
+      "description": "Curated game lists — all public, support `?page=1&limit=10`.",
+      "item": [
+        {
+          "name": "Free to Play",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/free-to-play?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "free-to-play"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Paid Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/paid?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "paid"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Discounted Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/discounted?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "discounted"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Early Access",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/early-access?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "early-access"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "VR Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/vr-only?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "vr-only"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Controller Support",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/controller-support?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "controller-support"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Multiplayer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/multiplayer?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "multiplayer"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Singleplayer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/singleplayer?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "singleplayer"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Co-op",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/coop?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "coop"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Open World",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/open-world?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "open-world"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Survival",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/survival?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "survival"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Horror",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/horror?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "horror"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Anime",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/anime?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "anime"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Indie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/indie?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "indie"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Top Rated",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/games/filter/top-rated?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "filter",
+                "top-rated"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 Search",
+      "description": "Case-insensitive keyword search across title, developer, and tags.",
+      "item": [
+        {
+          "name": "Search Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search/games?q=cosmic&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search",
+                "games"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "cosmic",
+                  "description": "Search keyword"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Search games by keyword across title, developer, and tags fields. Case-insensitive."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Analytics",
+      "description": "Aggregated data for charts and dashboard reporting. All public.",
+      "item": [
+        {
+          "name": "Top Rated Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/top-rated?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "top-rated"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Most Downloaded Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/most-downloaded?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "most-downloaded"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Revenue Analysis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/revenue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "revenue"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Platform Distribution",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/platform-distribution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "platform-distribution"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Genre Distribution",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/genre-distribution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "genre-distribution"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Trending Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/trending?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "trending"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Release Trends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/release-trends",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "release-trends"
+              ]
+            }
+          }
+        },
+        {
+          "name": "User Activity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/user-activity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "user-activity"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Wishlist Analysis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/wishlist-analysis",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "wishlist-analysis"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review Analysis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/games/review-analysis",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "games",
+                "review-analysis"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📈 Stats",
+      "description": "Lightweight count and stat queries for dashboard number cards. All public.",
+      "item": [
+        {
+          "name": "Total Game Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Top Rated Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/top-rated",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "top-rated"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Most Downloaded Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/most-downloaded",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "most-downloaded"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Average Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/average-price",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "average-price"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Average Rating",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/average-rating",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "average-rating"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Genre Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/genre-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "genre-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Platform Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/platform-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "platform-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Free-to-Play Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/free-to-play-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "free-to-play-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Multiplayer Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/multiplayer-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "multiplayer-count"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Monthly Releases",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/games/monthly-releases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stats",
+                "games",
+                "monthly-releases"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛡️ Admin",
+      "description": "Admin-only routes. **Requires** a JWT token from an account with `role: admin`.\n\nLogin with `admin@example.com` / `adminpassword123` to get the correct token.\n\n**Errors:**\n- `401 Unauthorized` — No or invalid token\n- `403 Forbidden` — Logged in but not an admin",
+      "item": [
+        {
+          "name": "Admin Games List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/games",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "games"
+              ]
+            },
+            "description": "Admin view of all games including archived/hidden entries."
+          }
+        },
+        {
+          "name": "Admin Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/analytics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "analytics"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "reports"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "dashboard"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔑 JWT Playground",
+      "description": "Endpoints for learning and testing JWT token flows.",
+      "item": [
+        {
+          "name": "Generate Token (Manual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"some-user-id\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/generate-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "generate-token"
+              ]
+            },
+            "description": "Manually generate a JWT token for testing purposes. Public endpoint."
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"PASTE_TOKEN_HERE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/verify-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "verify-token"
+              ]
+            },
+            "description": "Verify if a given JWT token is valid and decode its payload."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "refresh-token"
+              ]
+            },
+            "description": "Exchange an existing valid token for a new one with a fresh expiry."
+          }
+        },
+        {
+          "name": "JWT Profile (Protected)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "JWT Dashboard (Protected)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Private Games (Protected)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/private-games",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "private-games"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Private Analytics (Protected)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/private-analytics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "private-analytics"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Revoke Token (Protected)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/jwt/revoke-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jwt",
+                "revoke-token"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌐 Misc / Utilities",
+      "description": "Miscellaneous public endpoints for trending, news, compare, and recommendations.",
+      "item": [
+        {
+          "name": "Trending Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/trending/games",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "trending",
+                "games"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Latest News",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/news/latest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "news",
+                "latest"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Compare Two Games",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/compare/games/100001/100002",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "compare",
+                "games",
+                "100001",
+                "100002"
+              ]
+            },
+            "description": "Compare two games side by side. Replace `100001` and `100002` with real AppIDs."
+          }
+        },
+        {
+          "name": "Game Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recommendations/games/100001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recommendations",
+                "games",
+                "100001"
+              ]
+            },
+            "description": "Get game recommendations based on a given AppID."
+          }
+        }
+      ]
+    }
+  ]
+}
