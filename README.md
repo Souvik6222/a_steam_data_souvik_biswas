@@ -1,468 +1,199 @@
-# Steam Games Backend API
+# NEXUS — Full-Stack Steam Games Analytics & Management Dashboard
 
-A **beginner-friendly**, production-style REST API for a Steam-style games dashboard.
-
-Built with **Node.js**, **Express**, **MongoDB (Mongoose)**, **JWT authentication**, and **bcrypt** password hashing.
-
-This folder (`backend/`) is self-contained — all application code lives in `src/`, and `server.js` is the entry point.
+NEXUS is a beginner-friendly, production-style full-stack web application designed for exploring, curating, and analyzing Steam-style game data. The project couples a powerful **Node.js/Express/MongoDB** backend API with a modern, responsive **Vite/React** frontend dashboard styled after the premium, dark-slate **Lumina** design system.
 
 ---
 
-## What This Project Does
+## Architecture Overview
 
-- Stores and serves Steam-style game data (title, genres, price, ratings, platforms, etc.)
-- Lets users **register**, **login**, and access **protected** routes with JWT tokens
-- Provides **filtering**, **sorting**, **search**, **pagination**, **analytics**, and **stats** endpoints
-- Supports **admin-only** routes for managing games
+NEXUS is built using a decoupled, client-server architecture:
 
-Every API response follows the same JSON shape:
-
-```json
-{ "success": true, "message": "...", "data": { ... } }
+```
+                  ┌──────────────────────────────────────────┐
+                  │          Vite + React Frontend           │
+                  │   (Tailwind CSS, MUI, Redux Toolkit)     │
+                  └────────────────────┬─────────────────────┘
+                                       │
+                        Axios Requests │ (Automatic JWT Bearer Token via
+                                       │  Request/Response Interceptors)
+                                       ▼
+                  ┌──────────────────────────────────────────┐
+                  │         Node.js + Express API            │
+                  │     (JWT, Rate Limiters, Morgan)         │
+                  └────────────────────┬─────────────────────┘
+                                       │
+                              Mongoose │ (Data Validation & Modeling)
+                                       ▼
+                  ┌──────────────────────────────────────────┐
+                  │            MongoDB Database              │
+                  │        (User Schema, Game Schema)        │
+                  └──────────────────────────────────────────┘
 ```
 
-```json
-{ "success": false, "message": "...", "error": "..." }
-```
+### 1. Frontend Architecture (React)
+- **Vite + React**: High-performance dev server and optimized production builds.
+- **Redux Toolkit**: Centralized store managing authentication, dashboard states, and error handling.
+- **Axios with Interceptors**: All outbound requests automatically attach JWT authorization headers from local storage. Response interceptors handle token expiration (`401 Unauthorized`) and normalize error payloads.
+- **Lumina Design Aesthetic**: Tailored CSS and Tailwind utility classes providing slate-dark backgrounds, glowing radial gradient blobs (auroras), glassmorphism panels, and smooth hover micro-animations.
+
+### 2. Backend Architecture (Express API)
+- **RESTful Design**: Structured resources with modular controllers, services, routes, and custom middleware.
+- **MongoDB + Mongoose**: Dynamic schema definition for User validation (including bcrypt hashing) and Game structure.
+- **Security & Reliability**: Built-in rate limiting (`express-rate-limit`), CORS handling, and automatic request loggers (`morgan` and custom stream loggers).
+- **Interactive Developer Landing Page**: Features a dynamic route scanner (`routeScanner.js`) that analyzes Express routes in memory and renders a beautiful live documentation page with API test paths.
 
 ---
 
 ## Project Structure
 
 ```
-backend/
-├── server.js              ← Entry point (starts the server)
-├── package.json           ← Dependencies and npm scripts
-├── .env                   ← Secrets (never commit to git)
-├── .gitignore
-├── README.md
-├── data/
-│   └── sample-games.json  ← Sample dataset for seeding
-└── src/
-    ├── config/db.js       ← MongoDB connection
-    ├── models/            ← Game & User schemas
-    ├── controllers/     ← HTTP handlers (req → res)
-    ├── services/        ← Business logic + database queries
-    ├── routes/          ← URL → controller mapping
-    ├── middlewares/     ← Auth, logging, errors, rate limits
-    ├── utils/           ← asyncHandler, apiResponse, pagination
-    └── scripts/
-        └── seedData.js  ← Load JSON games into MongoDB
+a_steam_data_souvik_biswas/
+├── README.md                               ← This full-stack guide
+├── Steam_Games_API.postman_collection.json  ← Generated Postman v2.1.0 collection
+├── presentation_script.md                   ← Presentation talking points & guide
+│
+├── frontend/                               ← Vite + React Application
+│   ├── src/
+│   │   ├── components/                     ← Reusable UI blocks
+│   │   ├── hooks/                          ← Custom React hooks
+│   │   ├── layouts/                        ← Dashboard & general wrappers
+│   │   ├── pages/                          ← LandingPage, Auth, Dashboard, Registry
+│   │   ├── routes/                         ← Protected & public route guards
+│   │   ├── services/                       ← Axios API client with interceptors
+│   │   ├── store/                          ← Redux store configurations
+│   │   ├── App.jsx & main.jsx
+│   │   └── index.css                       ← Core styles & theme configurations
+│   ├── package.json
+│   ├── vite.config.js
+│   └── .env.development                    ← Frontend local environment config
+│
+└── backend/                                ← Express Backend Server
+    ├── server.js                           ← Entry point (starts the server)
+    ├── data/
+    │   └── sample-games.json               ← Seed dataset
+    ├── src/
+    │   ├── config/                         ← DB configurations & spec catalogs
+    │   ├── models/                         ← User & Game Schemas
+    │   ├── controllers/                    ← Express request handlers
+    │   ├── services/                       ← Database/Mongoose queries
+    │   ├── middlewares/                    ← Error handler, rate limiters, auth guards
+    │   ├── utils/                          ← Route scanner, response formatting
+    │   └── scripts/
+    │       ├── seedData.js                 ← Seeder script for game data
+    │       ├── createAdmin.js              ← CLI script to seed administrator accounts
+    │       └── generatePostman.js          ← Dynamic Postman generator script
+    └── package.json
 ```
 
 ---
 
-## Prerequisites
+## Setup & Installation
 
-- [Node.js](https://nodejs.org/) **18+**
-- [MongoDB](https://www.mongodb.com/) — local install **or** [MongoDB Atlas](https://www.mongodb.com/atlas) cloud cluster
-- [Postman](https://www.postman.com/) (optional, for testing APIs)
+### Prerequisites
+- **Node.js** 18+ installed.
+- **MongoDB** local instance running, or a **MongoDB Atlas** cloud URI.
 
 ---
 
-## Step 1 — Install Dependencies
+### Step 1: Configure & Start the Backend
 
-Open a terminal in the `backend/` folder:
+1. **Navigate to the Backend Directory & Install Dependencies:**
+   ```bash
+   cd backend
+   npm install
+   ```
 
+2. **Configure Environment Variables:**
+   Create a `.env` file in the `backend/` directory:
+   ```env
+   PORT=5000
+   MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/steam_games_db?retryWrites=true&w=majority
+   JWT_SECRET=your_super_secret_key_change_this_in_production
+   JWT_EXPIRES_IN=7d
+   NODE_ENV=development
+   ```
+
+3. **Seed Game Data:**
+   Load the default catalog into your MongoDB database:
+   ```bash
+   npm run seed
+   ```
+   *(To seed a custom dataset file, run `node src/scripts/seedData.js "C:/path/to/custom-games.json"`)*
+
+4. **Create a Test Administrator Account:**
+   Seed a verified admin user (`admin@example.com` / `adminpassword123`):
+   ```bash
+   node src/scripts/createAdmin.js
+   ```
+
+5. **Start the API Server:**
+   - **Development Mode (Auto-restart on save):**
+     ```bash
+     npm run dev
+     ```
+   - **Production Mode:**
+     ```bash
+     npm start
+     ```
+   Expect output confirming a successful MongoDB connection and the server listening on Port 5000.
+
+---
+
+### Step 2: Configure & Start the Frontend
+
+1. **Navigate to the Frontend Directory & Install Dependencies:**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+2. **Configure Environment Variables:**
+   A `.env.development` file is provided, directing Axios queries to the backend:
+   ```env
+   VITE_API_URL=http://localhost:5000
+   ```
+
+3. **Launch the Development Server:**
+   ```bash
+   npm run dev
+   ```
+   This boots the Vite application (typically on `http://localhost:5173`). Open the browser to explore.
+
+---
+
+## Essential Automation Scripts
+
+### Admin Seeding (`createAdmin.js`)
+Administrators have access to exclusive routes (game creation, editing, deleting, database monitoring). Run this script to generate a clean admin user directly:
 ```bash
-cd backend
-npm install
+node backend/src/scripts/createAdmin.js
 ```
 
-This installs:
-
-| Package | Purpose |
-|---------|---------|
-| `express` | Web framework — handles HTTP requests |
-| `mongoose` | Talk to MongoDB using JavaScript objects |
-| `dotenv` | Load secrets from `.env` |
-| `bcryptjs` | Hash passwords securely |
-| `jsonwebtoken` | Create and verify JWT tokens |
-| `cors` | Allow frontend on another domain to call this API |
-| `express-rate-limit` | Limit requests per IP (abuse protection) |
-| `morgan` | Log HTTP requests to the console |
-| `nodemon` | Auto-restart server on file changes (dev only) |
-
----
-
-## Step 2 — Configure `.env`
-
-Create or edit `backend/.env`:
-
-```env
-PORT=5000
-MONGO_URI=mongodb+srv://YOUR_USER:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/steam_games_db?retryWrites=true&w=majority
-JWT_SECRET=your_super_secret_key_change_this_in_production
-JWT_EXPIRES_IN=7d
-NODE_ENV=development
-```
-
-| Variable | What it means |
-|----------|---------------|
-| `PORT` | Which port the server listens on (e.g. `5000` → `http://localhost:5000`) |
-| `MONGO_URI` | Full MongoDB connection string (local or Atlas). Database name is usually at the end of the path (`/steam_games_db`) |
-| `JWT_SECRET` | Secret key used to **sign** JWT tokens. Never share or commit this |
-| `JWT_EXPIRES_IN` | How long tokens stay valid (`7d` = 7 days, `1h` = 1 hour) |
-| `NODE_ENV` | `development` or `production` — affects error detail in responses |
-
-**MongoDB Atlas checklist:**
-1. Create a free cluster at [cloud.mongodb.com](https://cloud.mongodb.com)
-2. **Database Access** → create a database user
-3. **Network Access** → add your IP (or `0.0.0.0/0` for dev only)
-4. **Connect** → copy the connection string → paste into `MONGO_URI`
-
----
-
-## Step 3 — Seed the Database
-
-Load sample games (or your full JSON dataset) into MongoDB:
-
+### Dynamic Postman Collection Generation (`generatePostman.js`)
+To prevent documentation from drifting when routing specs change, run:
 ```bash
-npm run seed
+node backend/src/scripts/generatePostman.js
 ```
-
-This runs `node src/scripts/seedData.js`, which:
-1. Connects to MongoDB
-2. Reads `data/sample-games.json`
-3. Deletes existing games (`deleteMany`)
-4. Inserts all games (`insertMany`)
-
-**Use your own dataset:**
-
-```bash
-node src/scripts/seedData.js "C:/path/to/your-steam-games.json"
-```
-
-The JSON file must be an **array** of game objects matching the `Game` model fields.
+This script inspects all active express endpoints at runtime and exports an updated `Steam_Games_API.postman_collection.json` file to the project root, ready to import.
 
 ---
 
-## Step 4 — Run the Server
-
-**Development** (auto-restarts on file changes):
-
-```bash
-npm run dev
-```
-
-**Production:**
-
-```bash
-npm start
-```
-
-You should see:
-
-```
-MongoDB connected
-Server running in development on port 5000
-Health check: http://localhost:5000/api/v1/health
-```
-
----
-
-## npm Scripts
-
-| Script | Command | What it does |
-|--------|---------|--------------|
-| `npm start` | `node server.js` | Run server in production mode |
-| `npm run dev` | `nodemon server.js` | Run with auto-restart on save |
-| `npm run seed` | `node src/scripts/seedData.js` | Load games JSON into MongoDB |
-
----
-
-## All API Endpoints
+## API Highlights
 
 Base URL: `http://localhost:5000`
 
-Legend: **Public** = no token | **Auth** = Bearer JWT | **Admin** = JWT + role `admin`
+- **Auth Routes (`/api/v1/auth/*`)**: Register, login, change passwords, and fetch authenticated profiles.
+- **Games Directory (`/api/v1/games/*`)**: 
+  - CRUD operations (`POST`, `PUT`, `DELETE` are protected behind administrator guards).
+  - Review operations (authenticated users can write, update, or remove reviews).
+  - Multi-parameter filtering (genres, price, rating, year, downloads, discounts).
+- **Analytics (`/api/v1/analytics/games/*`)**: Revenue analysis, platform distributions, genre count metrics, and release volume charts.
+- **Live API Playground**: Open `http://localhost:5000` in the browser to view the dynamic documentation. You can test public `GET` endpoints with click-to-open links containing mock query parameters.
 
 ---
 
-### Health & System
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/health` | Public |
-| GET | `/api/v1/system/info` | Public |
-| GET | `/api/v1/system/version` | Public |
-
----
-
-### Auth — `/api/v1/auth`
-
-| Method | Path | Access |
-|--------|------|--------|
-| POST | `/api/v1/auth/register` | Public |
-| POST | `/api/v1/auth/login` | Public |
-| POST | `/api/v1/auth/logout` | Public |
-| GET | `/api/v1/auth/profile` | Auth |
-| PATCH | `/api/v1/auth/profile` | Auth |
-| POST | `/api/v1/auth/change-password` | Auth |
-
----
-
-### JWT Playground — `/api/v1/jwt`
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/jwt/profile` | Auth |
-| GET | `/api/v1/jwt/dashboard` | Auth |
-| POST | `/api/v1/jwt/generate-token` | Public (testing) |
-| POST | `/api/v1/jwt/verify-token` | Public |
-| POST | `/api/v1/jwt/refresh-token` | Bearer token required |
-| DELETE | `/api/v1/jwt/revoke-token` | Auth |
-| GET | `/api/v1/jwt/private-games` | Auth |
-| GET | `/api/v1/jwt/private-analytics` | Auth |
-
----
-
-### Games — `/api/v1/games`
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/games` | Public |
-| GET | `/api/v1/games/random` | Public |
-| GET | `/api/v1/games/exists/:appid` | Public |
-| GET | `/api/v1/games/:appid` | Public |
-| POST | `/api/v1/games` | Admin |
-| PUT | `/api/v1/games/:appid` | Admin |
-| PATCH | `/api/v1/games/:appid` | Admin |
-| DELETE | `/api/v1/games/:appid` | Admin |
-| PATCH | `/api/v1/games/:appid/archive` | Auth |
-| PATCH | `/api/v1/games/:appid/restore` | Auth |
-
-**List filters** (query params on `GET /api/v1/games`):
-
-`?genre=action&developer=valve&platform=windows&tag=multiplayer&minPrice=0&maxPrice=50&rating=8&releaseYear=2024&discount=10&multiplayer=true&freeToPlay=true&sort=rating&page=1&limit=10`
-
-**Sort options:** `rating`, `price`, `downloads`, `releaseDate`, `popularity`, `title`
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/games/sort/price-desc` | Public |
-| GET | `/api/v1/games/sort/rating-desc` | Public |
-| GET | `/api/v1/games/sort/downloads-desc` | Public |
-| GET | `/api/v1/games/sort/releaseDate-desc` | Public |
-| GET | `/api/v1/games/sort/popularity-desc` | Public |
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/games/genre/:genre` | Public |
-| GET | `/api/v1/games/developer/:developer` | Public |
-| GET | `/api/v1/games/publisher/:publisher` | Public |
-| GET | `/api/v1/games/platform/:platform` | Public |
-| GET | `/api/v1/games/tag/:tag` | Public |
-| GET | `/api/v1/games/release-year/:year` | Public |
-| GET | `/api/v1/games/rating/:rating` | Public |
-| GET | `/api/v1/games/price/:price` | Public |
-| GET | `/api/v1/games/feature/:feature` | Public |
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/games/:appid/summary` | Public |
-| GET | `/api/v1/games/:appid/history` | Public |
-| GET | `/api/v1/games/:appid/related` | Public |
-| GET | `/api/v1/games/:appid/screenshots` | Public |
-| GET | `/api/v1/games/:appid/trailers` | Public |
-| GET | `/api/v1/games/:appid/reviews` | Public |
-| POST | `/api/v1/games/:appid/reviews` | Auth |
-| PATCH | `/api/v1/games/:appid/reviews/:reviewId` | Auth |
-| DELETE | `/api/v1/games/:appid/reviews/:reviewId` | Auth |
-| GET | `/api/v1/games/:appid/system-requirements` | Public |
-| GET | `/api/v1/games/:appid/dlc` | Public |
-| GET | `/api/v1/games/:appid/achievements` | Public |
-| GET | `/api/v1/games/:appid/updates` | Public |
-
----
-
-### Game Filters — `/api/v1/games/filter`
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/games/filter/free-to-play` | Public |
-| GET | `/api/v1/games/filter/paid` | Public |
-| GET | `/api/v1/games/filter/discounted` | Public |
-| GET | `/api/v1/games/filter/early-access` | Public |
-| GET | `/api/v1/games/filter/vr-only` | Public |
-| GET | `/api/v1/games/filter/controller-support` | Public |
-| GET | `/api/v1/games/filter/multiplayer` | Public |
-| GET | `/api/v1/games/filter/singleplayer` | Public |
-| GET | `/api/v1/games/filter/coop` | Public |
-| GET | `/api/v1/games/filter/open-world` | Public |
-| GET | `/api/v1/games/filter/survival` | Public |
-| GET | `/api/v1/games/filter/horror` | Public |
-| GET | `/api/v1/games/filter/anime` | Public |
-| GET | `/api/v1/games/filter/indie` | Public |
-| GET | `/api/v1/games/filter/top-rated` | Public |
-
-All filter routes support `?page=1&limit=10`.
-
----
-
-### Search — `/api/v1/search`
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/search/games?q=keyword&page=1&limit=10` | Public |
-
----
-
-### Analytics — `/api/v1/analytics/games`
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/analytics/games/top-rated?limit=10` | Public |
-| GET | `/api/v1/analytics/games/most-downloaded?limit=10` | Public |
-| GET | `/api/v1/analytics/games/revenue` | Public |
-| GET | `/api/v1/analytics/games/platform-distribution` | Public |
-| GET | `/api/v1/analytics/games/genre-distribution` | Public |
-| GET | `/api/v1/analytics/games/trending?limit=10` | Public |
-| GET | `/api/v1/analytics/games/release-trends` | Public |
-| GET | `/api/v1/analytics/games/user-activity` | Public |
-| GET | `/api/v1/analytics/games/wishlist-analysis` | Public |
-| GET | `/api/v1/analytics/games/review-analysis` | Public |
-
----
-
-### Stats — `/api/v1/stats/games`
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/stats/games/count` | Public |
-| GET | `/api/v1/stats/games/top-rated` | Public |
-| GET | `/api/v1/stats/games/most-downloaded` | Public |
-| GET | `/api/v1/stats/games/average-price` | Public |
-| GET | `/api/v1/stats/games/average-rating` | Public |
-| GET | `/api/v1/stats/games/genre-count` | Public |
-| GET | `/api/v1/stats/games/platform-count` | Public |
-| GET | `/api/v1/stats/games/free-to-play-count` | Public |
-| GET | `/api/v1/stats/games/multiplayer-count` | Public |
-| GET | `/api/v1/stats/games/monthly-releases` | Public |
-
----
-
-### Admin — `/api/v1/admin` (Auth + Admin role)
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/admin/games` | Admin |
-| GET | `/api/v1/admin/analytics` | Admin |
-| GET | `/api/v1/admin/reports` | Admin |
-| GET | `/api/v1/admin/dashboard` | Admin |
-
----
-
-### Misc
-
-| Method | Path | Access |
-|--------|------|--------|
-| GET | `/api/v1/trending/games` | Public |
-| GET | `/api/v1/news/latest` | Public |
-| GET | `/api/v1/compare/games/:id1/:id2` | Public |
-| GET | `/api/v1/recommendations/games/:appid` | Public |
-
----
-
-## Test with Postman (Step by Step)
-
-### 1. Health check (no auth)
-
-1. Open Postman → **New** → **HTTP Request**
-2. Set method to **GET**
-3. URL: `http://localhost:5000/api/v1/health`
-4. Click **Send**
-5. Expect: `{ "success": true, "data": { "status": "ok", ... } }`
-
-### 2. List games (no auth)
-
-1. **GET** `http://localhost:5000/api/v1/games?page=1&limit=5`
-2. Click **Send** — you should see seeded games in `data.games`
-
-### 3. Register a user
-
-1. **POST** `http://localhost:5000/api/v1/auth/register`
-2. **Body** tab → **raw** → **JSON**:
-
-```json
-{
-  "name": "Test User",
-  "email": "test@example.com",
-  "password": "secret12"
-}
-```
-
-3. Click **Send**
-4. Copy `data.token` from the response — you need this for protected routes
-
-### 4. Login (alternative to register)
-
-1. **POST** `http://localhost:5000/api/v1/auth/login`
-2. Body:
-
-```json
-{
-  "email": "test@example.com",
-  "password": "secret12"
-}
-```
-
-3. Copy the token from the response
-
-### 5. Call a protected route
-
-1. **GET** `http://localhost:5000/api/v1/auth/profile`
-2. **Authorization** tab → Type: **Bearer Token**
-3. Paste your token (Postman adds `Bearer` automatically)
-4. Click **Send** — expect your user profile in `data.user`
-
-### 6. Search games
-
-1. **GET** `http://localhost:5000/api/v1/search/games?q=cosmic&page=1&limit=10`
-2. No auth needed
-
-### 7. Analytics
-
-1. **GET** `http://localhost:5000/api/v1/analytics/games/top-rated?limit=5`
-2. No auth needed
-
-### 8. Add a review (auth required)
-
-1. **POST** `http://localhost:5000/api/v1/games/100001/reviews`
-2. **Authorization** → Bearer Token
-3. Body:
-
-```json
-{
-  "text": "Great game!",
-  "rating": 9
-}
-```
-
----
-
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| `MongoDB connection error` | Check `MONGO_URI` in `.env`; verify Atlas Network Access allows your IP |
-| `E11000 duplicate key` on seed | Normal if re-seeding without delete — run `npm run seed` (it clears first) |
-| `401 Unauthorized` | Add Bearer token in Authorization header |
-| `403 Forbidden` on admin routes | User must have `role: "admin"` in the database |
-| `Cannot GET /` | API lives under `/api/v1/*` — use `/api/v1/health` not `/` |
-| Empty games list | Run `npm run seed` first |
-
----
-
-## Security Notes
-
-- Never commit `.env` to git (already in `.gitignore`)
-- Change `JWT_SECRET` before any real deployment
-- Rotate MongoDB passwords if they were ever shared publicly
-- Rate limiting: 100 req/15min globally, 10 req/15min on login/register
-
----
-
-## License
-
-MIT — learning project.
+## Recent Modifications
+
+1. **Axios Centralization**: Refactored the frontend's networking in `api.js` to run on a central axios instance equipped with automatic token injection interceptors.
+2. **Admin Auto-Creation**: Introduced the `createAdmin.js` script to instantly provision accounts with access levels above standard users.
+3. **Auto-Documenter**: Created the Postman generation pipeline, mapping code routes directly to importable REST requests.
